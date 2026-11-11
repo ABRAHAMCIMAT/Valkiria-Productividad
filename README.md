@@ -1,19 +1,35 @@
 # Valkiria Productividad
 
-Asistente de IA de escritorio de **VALTRE**, 100 % local, basado en modelos LLM pequeños de código abierto: chat, búsqueda sobre tus propios archivos con citas, generación de documentos Office, proyectos y tareas programadas, sin enviar datos fuera del equipo.
+Asistente de IA de escritorio de **VALTRE** para **macOS y Windows**, 100 % local y basado en **mini LLMs gratuitos de código abierto**. Ofrece:
+- chat sobre tus propios documentos, con citas verificables;
+- un agente con herramientas bajo tu control;
+- creación de documentos Office;
+- proyectos aislados y tareas programadas.
+
+Todo esto sin enviar datos fuera del equipo y optimizado para laptops de hasta 32 GB de RAM.
+
+## Arquitectura en una línea
+
+**Fork de Jan** (Tauri, React y llama.cpp/MLX) → **Valkiria Core** (Python 3.15, FastAPI, LangGraph y LangChain v1, LanceDB, Docling) → **MLflow 3** para LLMOps (trazas, Prompt Registry, evaluación y evidencias por fase).
 
 ## Documentación
 
 | Documento | Contenido |
 |---|---|
-| [01 · Ingeniería inversa](docs/01-ingenieria-inversa.md) | Análisis de la versión de referencia: stack, datos, sistema agéntico y RAG |
-| [02 · Arquitectura propuesta](docs/02-arquitectura-propuesta.md) | Diseño de la nueva solución local, modelos y adaptaciones para modelos pequeños |
-| [03 · Plan de desarrollo incremental](docs/03-plan-desarrollo-incremental.md) | Fases 0 a 9 con entregables y criterios de "terminado" |
+| [01 · Ingeniería inversa](docs/01-ingenieria-inversa.md) | Análisis de la versión de referencia |
+| [02 · Revisión de la arquitectura basada en Azure](docs/02-revision-arquitectura-azure.md) | Diagnóstico, mapeo de Azure a open source, catálogo de mini LLMs y presupuesto de RAM |
+| [03 · Arquitectura de referencia](docs/03-arquitectura-referencia.md) | C4, grafo del agente, flujos, contratos, datos, confiabilidad, escalabilidad y despliegue |
+| [04 · Seguridad](docs/04-seguridad.md) | STRIDE, OWASP LLM Top 10, SSDF en CI y privacidad |
+| [05 · LLMOps y trazabilidad](docs/05-llmops-trazabilidad.md) | Ciclo L1 a L9, gates, auditoría y evidencias de cierre |
+| [06 · Plan de desarrollo incremental](docs/06-plan-desarrollo-incremental.md) | Fases F0 a F11, DoR, DoD y riesgos |
+| [07 · Historias de usuario](docs/07-historias-usuario.md) | 28 HU con análisis INVEST y versión mejorada |
+| [ADR](docs/adr/README.md) | 12 decisiones de arquitectura |
+| [Evidencias](evidencias/README.md) | Paquetes y plantillas de cierre de fase |
 
-## Stack previsto
+## Atribución
 
-Tauri 2 · Rust · React + TypeScript · Ollama / llama.cpp · Qwen3 / Gemma 3 · fastembed (multilingual-e5-small) · SQLite + FTS5 + sqlite-vec · whisper.cpp · Python (`uv`) para Office/PDF.
+La interfaz de escritorio deriva de [Jan](https://github.com/janhq/jan), de Menlo Research, bajo la licencia Apache 2.0.
 
 ## Estado
 
-En planeación. Siguiente paso: **Fase 0**, base Tauri con chat local en streaming.
+En planeación. Siguiente paso: **F0 · Fundaciones y gobierno**.
