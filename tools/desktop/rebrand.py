@@ -261,7 +261,18 @@ def _tauri(datos: dict[str, object]) -> None:
         raise ParcheError(f"tauri.conf.json: se esperaba un objeto en {app!r:.40}")
     csp = app["security"]["csp"]  # type: ignore[index]
     # Sin analítica de terceros (PostHog) en la política de contenido.
-    csp["script-src"] = re.sub(r"\s*https://\S*posthog\.com", "", csp["script-src"])
+    csp["script-src"] = sin_posthog(csp["script-src"])
+
+
+def sin_posthog(fuentes: str) -> str:
+    """Quita de una lista de fuentes CSP las de PostHog (posthog.com y sus subdominios)."""
+
+    def es_posthog(fuente: str) -> bool:
+        host = fuente.removeprefix("https://").split("/", 1)[0]
+        es_dominio = host == "posthog.com" or host.endswith(".posthog.com")
+        return fuente.startswith("https://") and es_dominio
+
+    return " ".join(f for f in fuentes.split() if not es_posthog(f))
 
 
 ARGS_WEBVIEW2 = " ".join(

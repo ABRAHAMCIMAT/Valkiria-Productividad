@@ -17,6 +17,30 @@ fi
 eval "$(bash "$ROOT/tools/sonar/sources.sh")"
 if [[ $has_code != true ]]; then echo "Todavía no hay código propio que analizar (core/, valkiria-extension/)."; exit 0; fi
 
+# Mismos reportes que genera CI (sonar.yml): sin ellos la cobertura de código nuevo sale en 0 %.
+# Las pruebas fallidas no detienen el análisis: el Quality Gate es quien decide.
+export VIRTUAL_ENV=""
+for mod in core llmops; do
+  [[ -f "$ROOT/$mod/pyproject.toml" ]] || continue
+  (
+    cd "$ROOT/$mod" && mkdir -p reports && uv sync -q --frozen --all-groups  # NOSONAR
+    uv run --no-sync pytest -q --cov=src --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml || true  # NOSONAR
+    if [[ $mod == core ]]; then
+      uv run --no-sync pytest ../tools/tests -q -o addopts="" -p no:cacheprovider --cov=../tools --cov-branch \
+        --cov-report=xml:reports/coverage-tools.xml || true  # NOSONAR
+      uv run --no-sync bandit -q -r src ../tools -x ../tools/tests -f json -o reports/bandit.json || true  # NOSONAR
+    else
+      uv run --no-sync bandit -q -r src -f json -o reports/bandit.json || true  # NOSONAR
+    fi
+    uv run --no-sync ruff check --output-format=json --output-file=reports/ruff.json . || true  # NOSONAR
+    uv run --no-sync mypy src > reports/mypy.txt || true  # NOSONAR
+  )
+done
+# coverage.py escribe rutas absolutas del equipo; el escáner corre en un contenedor con el repo en /usr/src.
+for f in "$ROOT"/core/reports/coverage*.xml "$ROOT"/llmops/reports/coverage.xml; do
+  [[ -f $f ]] && sed -i.bak "s#$ROOT#/usr/src#g" "$f" && rm -f "$f.bak"
+done
+
 args=(-Dsonar.projectKey="$KEY" -Dsonar.host.url=http://sonarqube:9000 -Dsonar.sources="$sources")
 [[ -n $tests ]] && args+=(-Dsonar.tests="$tests")
 
