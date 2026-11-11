@@ -141,8 +141,8 @@ descripcion = "SonarQube local publica solo 127.0.0.1:9000, la base de datos no 
 resultado = "pass"
 
 [[criterio.demostraciones]]
-descripcion = "Análisis local con tools/sonar/scan-local.sh"
-resultado = "pendiente: requiere SONAR_LOCAL_TOKEN del responsable"
+descripcion = "Análisis local con tools/sonar/scan-local.sh: Quality Gate PASSED, cobertura 96.5 %, 0 hallazgos (L4-desarrollo/sonar-local-metrics.json, L6-seguridad/sonar-local-privacidad.txt, 2026-11-11)"
+resultado = "pass"
 
 [[criterio]]
 id = "CA-29.5"
