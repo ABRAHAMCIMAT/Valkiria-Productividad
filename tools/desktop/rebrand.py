@@ -208,7 +208,16 @@ PARCHES = [
 _JAN = re.compile(r"\bJan\b")
 
 
-def _editar_json(ruta: Path, cambio: Callable[[dict[str, object]], None]) -> bool:
+def dentro_de(raiz: Path, ruta: Path) -> Path:
+    """Devuelve ``ruta`` resuelta si está dentro de ``raiz``; si no, falla (sin path traversal)."""
+    base, destino = raiz.resolve(), ruta.resolve()
+    if not destino.is_relative_to(base):
+        raise ParcheError(f"ruta fuera de {base}: {destino}")
+    return destino
+
+
+def _editar_json(app: Path, ruta: Path, cambio: Callable[[dict[str, object]], None]) -> bool:
+    ruta = dentro_de(app, ruta)
     texto = ruta.read_text(encoding="utf-8")
     datos = json.loads(texto)
     cambio(datos)
@@ -321,7 +330,7 @@ def aplicar(app: Path = APP, solo_verificar: bool = False) -> list[str]:
         if nuevo != original:
             cambios.append(rel)
             if not solo_verificar:
-                (app / rel).write_text(nuevo, encoding="utf-8")
+                dentro_de(app, app / rel).write_text(nuevo, encoding="utf-8")
 
     for p in PARCHES:
         ruta = app / p.ruta
@@ -345,7 +354,7 @@ def aplicar(app: Path = APP, solo_verificar: bool = False) -> list[str]:
             datos = json.loads(texto)
             cambio(datos)
             registrar(rel, texto, json.dumps(datos, indent=2, ensure_ascii=False) + "\n")
-        elif _editar_json(ruta, cambio):
+        elif _editar_json(app, ruta, cambio):
             cambios.append(rel)
 
     for ruta in sorted((app / "web-app/src/locales").glob("*/*.json")):
@@ -372,7 +381,7 @@ def aplicar(app: Path = APP, solo_verificar: bool = False) -> list[str]:
         if a.exists() and a.read_bytes() != b.read_bytes():
             cambios.append(destino)
             if not solo_verificar:
-                shutil.copyfile(a, b)
+                shutil.copyfile(a, dentro_de(app, b))
     return cambios
 
 
