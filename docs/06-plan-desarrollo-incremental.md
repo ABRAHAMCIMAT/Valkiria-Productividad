@@ -65,7 +65,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
   - Se conservan `LICENSE` y `NOTICE` (Apache 2.0, con atribución a Menlo Research).
   - Se desactivan los proveedores remotos de la nube por defecto.
 - **Core:** Python 3.15 gestionado con `uv` (`requires-python = ">=3.15"`), `ruff`, `mypy --strict`, `pytest`.
-- **CI (GitHub Actions)** con matriz `macos-14 (arm64)`, `macos-15-intel (x64)` y `windows-2022`, que corre (GitHub retiró `macos-13`):
+- **CI (GitHub Actions)** con matriz `macos-15 (arm64)`, `macos-15-intel (x64)` y `windows-2022`, que corre (GitHub retiró `macos-13` y `macos-14`):
   - lint, pruebas y build;
   - Gitleaks, Semgrep, Bandit, pip-audit, Trivy y Syft;
   - OpenSSF Scorecard.

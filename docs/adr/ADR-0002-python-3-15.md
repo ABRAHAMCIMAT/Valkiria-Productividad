@@ -16,7 +16,7 @@ Requisito: todo el backend se escribe en Python, en su **última versión establ
 - Si una dependencia crítica no está disponible, se permite **de forma temporal** un *build* 3.14 **solo para esa plataforma**, registrado como riesgo con fecha de vencimiento (la próxima versión menor de la dependencia). CI ejecuta las pruebas en ambas versiones durante la contingencia.
 
 ## Resultado del spike de F0 (2026-11-10)
-Consulta a PyPI de las últimas versiones; la verificación real con instalación (`--only-binary :all:`) la repite cada semana el workflow [`spike-deps.yml`](../../.github/workflows/spike-deps.yml) en `macos-14`, `macos-15-intel` y `windows-2022`, con Python 3.15 y 3.14.
+Consulta a PyPI de las últimas versiones; la verificación real con instalación (`--only-binary :all:`) la repite cada semana el workflow [`spike-deps.yml`](../../.github/workflows/spike-deps.yml) en `macos-15`, `macos-15-intel` y `windows-2022`, con Python 3.15 y 3.14.
 
 | Dependencia | Fase | macOS arm64 · 3.15 | macOS x64 · 3.15 | Windows x64 · 3.15 | Nota |
 |---|---|---|---|---|---|
