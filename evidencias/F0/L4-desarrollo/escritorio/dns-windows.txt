@@ -1,0 +1,5 @@
+41.0.1.10.in-addr.arpa
+productionresultssa12.blob.core.windows.net
+results-receiver.actions.githubusercontent.com
+runnervmquqza
+runnervmquqza.dlizzmdklvsull1zzi0vtv4cxb.yx.internal.cloudapp.net

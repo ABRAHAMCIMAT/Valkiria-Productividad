@@ -1,0 +1,47 @@
+hu,regla,criterio,test,resultado,mlflow_run_id,commit,pr,fase,evidencia
+HU-01,RN-01.1;RN-01.4,CA-01.1,test_ca_01_marca_aplicada_en_el_repositorio,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,test_ca_01_rebrand_completo_sobre_jan,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,test_rn_01_1_y_01_4_identidad_en_tauri,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,test_ca_01_1_valida_identidad,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,test_ca_01_1_app_que_se_cierra_falla,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,job:Humo macOS · arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,job:Humo macOS · x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,job:Build y humo Windows x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.2,CA-01.2,test_rn_01_2_atribucion_y_licencia,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.3,CA-01.3,test_rn_01_3_sin_updater_analitica_ni_proveedores_remotos_activos,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,test_ca_01_3_clasifica_conexiones,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,test_ca_01_3_macos_sin_conexiones_externas,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,test_ca_01_3_macos_conexion_externa_falla,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,job:Humo macOS · arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,job:Humo macOS · x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,job:Build y humo Windows x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.3,CA-02.1,job:Seguridad,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.3,CA-02.1,PR con token falso de GitHub: Seguridad falla por Gitleaks (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955015724),pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,#9,F0,EV-F0-L6
+HU-02,,CA-02.2,job:Core · macos-arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-02,,CA-02.2,job:Core · macos-x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-02,,CA-02.2,job:Core · windows-x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_licencia_permitida,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_licencia_no_permitida_bloquea_salvo_excepcion,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_excepcion_vigente_es_valida,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_excepcion_vencida_o_incompleta_falla,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_excepcion_por_objetivo,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,test_ca_02_cli_licencias,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-02,RN-02.1;RN-02.2;RN-02.4,CA-02.3,job:Seguridad,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-03,RN-03.1,CA-03.1,test_ca_03_1_tags_completos_cuentan_como_evidencia,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.1,CA-03.1,test_ca_03_1_run_de_ejemplo_tiene_todos_los_tags,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.1,CA-03.1,job:Evidencia MLflow (HU-03),pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,,CA-03.2,test_ca_03_2_exportacion_por_fase,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,,CA-03.2,job:Evidencia MLflow (HU-03),pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_ca_03_3_cada_tag_obligatorio_es_requerido,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_ca_03_3_valor_vacio_no_cuenta,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_ca_03_3_sin_version_de_prompt,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_ca_03_3_formatos_invalidos,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_ca_03_3_run_sin_git_sha_hace_fallar_el_gate,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-03,RN-03.2;RN-03.3,CA-03.3,test_rn_03_3_servidor_solo_en_loopback,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L5
+HU-29,RN-29.2;RN-29.3,CA-29.1,job:SonarQube Cloud,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-29,RN-29.2;RN-29.3,CA-29.1,"PR con inyección de comandos, MD5 y credencial: Quality Gate FAILED (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955023275); Seguridad falla por Bandit, Semgrep y Gitleaks",pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,#10,F0,EV-F0-L6
+HU-29,,CA-29.2,job:SonarQube Cloud,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-29,RN-29.5;RN-29.6,CA-29.3,job:SonarQube Cloud,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-29,RN-29.4,CA-29.4,"SonarQube local publica solo 127.0.0.1:9000, la base de datos no expone puertos y no responde en la IP de red (verificado 2026-11-10)",pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-29,RN-29.4,CA-29.4,Análisis local con tools/sonar/scan-local.sh,pendiente: requiere SONAR_LOCAL_TOKEN del responsable,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-29,RN-29.1,CA-29.5,test_sonar_excluye_el_fork_de_jan,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4

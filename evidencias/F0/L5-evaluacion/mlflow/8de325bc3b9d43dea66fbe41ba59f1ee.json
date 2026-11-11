@@ -1,0 +1,29 @@
+{
+  "run_id": "8de325bc3b9d43dea66fbe41ba59f1ee",
+  "experimento": "formato-eval",
+  "nombre": "formato-F0",
+  "estado": "FINISHED",
+  "inicio_ms": 1794401641567,
+  "fin_ms": 1794401641861,
+  "tags": {
+    "dataset": "formato@v1",
+    "gate.formato": "pass",
+    "git.sha": "cf0cf48de32cfa7e2a4846a4bf909cadee542114",
+    "hu": "HU-03",
+    "model.name": "fixture-formato-v1",
+    "model.sha256": "1d6571f5cc863323699ab1eb272ac58649bf9bdd0f043e87d86684c4cf2dd129",
+    "os": "linux-x64",
+    "phase": "F0",
+    "profile": "ci",
+    "prompt.formato.version": "1",
+    "valkiria.version": "0.0.1"
+  },
+  "params": {
+    "dataset": "formato@v1",
+    "umbral.json_valido": "1.0"
+  },
+  "metricas": {
+    "casos": 5.0,
+    "json_valido": 1.0
+  }
+}

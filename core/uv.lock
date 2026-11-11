@@ -722,6 +722,7 @@ source = { editable = "." }
 [package.dev-dependencies]
 dev = [
     { name = "bandit" },
+    { name = "defusedxml" },
     { name = "mypy" },
     { name = "pip-audit" },
     { name = "pip-licenses" },
@@ -735,6 +736,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "bandit", specifier = ">=1.9" },
+    { name = "defusedxml", specifier = ">=0.7" },
     { name = "mypy", specifier = ">=1.20" },
     { name = "pip-audit", specifier = ">=2.10" },
     { name = "pip-licenses", specifier = ">=5" },

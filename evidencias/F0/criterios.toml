@@ -1,0 +1,152 @@
+# Criterios de aceptación de F0 y su evidencia (entrada de tools/evidencias/trazabilidad.py).
+# Las pruebas se nombran como en el código; los jobs, como los muestra GitHub Actions.
+fase = "F0"
+
+# ---------------- HU-01 · Aplicación con marca Valkiria ----------------
+[[criterio]]
+id = "CA-01.1"
+hu = "HU-01"
+reglas = ["RN-01.1", "RN-01.4"]
+evidencia = "EV-F0-L4"
+pruebas = [
+  "test_ca_01_marca_aplicada_en_el_repositorio",
+  "test_ca_01_rebrand_completo_sobre_jan",
+  "test_rn_01_1_y_01_4_identidad_en_tauri",
+  "test_ca_01_1_valida_identidad",
+  "test_ca_01_1_app_que_se_cierra_falla",
+]
+jobs = ["Humo macOS · arm64", "Humo macOS · x64", "Build y humo Windows x64"]
+
+[[criterio]]
+id = "CA-01.2"
+hu = "HU-01"
+reglas = ["RN-01.2"]
+evidencia = "EV-F0-L4"
+pruebas = ["test_rn_01_2_atribucion_y_licencia"]
+
+[[criterio]]
+id = "CA-01.3"
+hu = "HU-01"
+reglas = ["RN-01.3"]
+evidencia = "EV-F0-L6"
+pruebas = [
+  "test_rn_01_3_sin_updater_analitica_ni_proveedores_remotos_activos",
+  "test_ca_01_3_clasifica_conexiones",
+  "test_ca_01_3_macos_sin_conexiones_externas",
+  "test_ca_01_3_macos_conexion_externa_falla",
+]
+jobs = ["Humo macOS · arm64", "Humo macOS · x64", "Build y humo Windows x64"]
+
+# ---------------- HU-02 · Pipeline de integración seguro ----------------
+[[criterio]]
+id = "CA-02.1"
+hu = "HU-02"
+reglas = ["RN-02.1", "RN-02.3"]
+evidencia = "EV-F0-L6"
+jobs = ["Seguridad"]
+
+[[criterio.demostraciones]]
+descripcion = "PR con token falso de GitHub: Seguridad falla por Gitleaks (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955015724)"
+resultado = "pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión"
+pr = "#9"
+
+[[criterio]]
+id = "CA-02.2"
+hu = "HU-02"
+reglas = []
+evidencia = "EV-F0-L4"
+jobs = ["Core · macos-arm64", "Core · macos-x64", "Core · windows-x64"]
+
+[[criterio]]
+id = "CA-02.3"
+hu = "HU-02"
+reglas = ["RN-02.1", "RN-02.2", "RN-02.4"]
+evidencia = "EV-F0-L6"
+pruebas = [
+  "test_ca_02_licencia_permitida",
+  "test_ca_02_licencia_no_permitida_bloquea_salvo_excepcion",
+  "test_ca_02_excepcion_vigente_es_valida",
+  "test_ca_02_excepcion_vencida_o_incompleta_falla",
+  "test_ca_02_excepcion_por_objetivo",
+  "test_ca_02_cli_licencias",
+]
+jobs = ["Seguridad"]
+
+# ---------------- HU-03 · Registro de experimentos y trazas ----------------
+[[criterio]]
+id = "CA-03.1"
+hu = "HU-03"
+reglas = ["RN-03.1"]
+evidencia = "EV-F0-L5"
+pruebas = ["test_ca_03_1_tags_completos_cuentan_como_evidencia", "test_ca_03_1_run_de_ejemplo_tiene_todos_los_tags"]
+jobs = ["Evidencia MLflow (HU-03)"]
+
+[[criterio]]
+id = "CA-03.2"
+hu = "HU-03"
+reglas = []
+evidencia = "EV-F0-L5"
+pruebas = ["test_ca_03_2_exportacion_por_fase"]
+jobs = ["Evidencia MLflow (HU-03)"]
+
+[[criterio]]
+id = "CA-03.3"
+hu = "HU-03"
+reglas = ["RN-03.2", "RN-03.3"]
+evidencia = "EV-F0-L5"
+pruebas = [
+  "test_ca_03_3_cada_tag_obligatorio_es_requerido",
+  "test_ca_03_3_valor_vacio_no_cuenta",
+  "test_ca_03_3_sin_version_de_prompt",
+  "test_ca_03_3_formatos_invalidos",
+  "test_ca_03_3_run_sin_git_sha_hace_fallar_el_gate",
+  "test_rn_03_3_servidor_solo_en_loopback",
+]
+
+# ---------------- HU-29 · Tablero de calidad del código ----------------
+[[criterio]]
+id = "CA-29.1"
+hu = "HU-29"
+reglas = ["RN-29.2", "RN-29.3"]
+evidencia = "EV-F0-L6"
+jobs = ["SonarQube Cloud"]
+
+[[criterio.demostraciones]]
+descripcion = "PR con inyección de comandos, MD5 y credencial: Quality Gate FAILED (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955023275); Seguridad falla por Bandit, Semgrep y Gitleaks"
+resultado = "pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión"
+pr = "#10"
+
+[[criterio]]
+id = "CA-29.2"
+hu = "HU-29"
+reglas = []
+evidencia = "EV-F0-L4"
+jobs = ["SonarQube Cloud"]
+
+[[criterio]]
+id = "CA-29.3"
+hu = "HU-29"
+reglas = ["RN-29.5", "RN-29.6"]
+evidencia = "EV-F0-L4"
+jobs = ["SonarQube Cloud"]
+
+[[criterio]]
+id = "CA-29.4"
+hu = "HU-29"
+reglas = ["RN-29.4"]
+evidencia = "EV-F0-L6"
+
+[[criterio.demostraciones]]
+descripcion = "SonarQube local publica solo 127.0.0.1:9000, la base de datos no expone puertos y no responde en la IP de red (verificado 2026-11-10)"
+resultado = "pass"
+
+[[criterio.demostraciones]]
+descripcion = "Análisis local con tools/sonar/scan-local.sh"
+resultado = "pendiente: requiere SONAR_LOCAL_TOKEN del responsable"
+
+[[criterio]]
+id = "CA-29.5"
+hu = "HU-29"
+reglas = ["RN-29.1"]
+evidencia = "EV-F0-L4"
+pruebas = ["test_sonar_excluye_el_fork_de_jan"]
