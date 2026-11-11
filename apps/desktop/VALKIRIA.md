@@ -39,7 +39,7 @@ Las de marca y privacidad las aplica `tools/desktop/rebrand.py`. Los únicos cam
 
 ## Dependencias (remediación de EX-003, 2026-11-11)
 
-Cambios manuales para reducir los hallazgos de terceros de 100 a 6 (4 CVE distintas). Al sincronizar un tag nuevo de Jan
+Cambios manuales para llevar los hallazgos altos o críticos de terceros de 100 a **0**. Al sincronizar un tag nuevo de Jan
 hay que conservarlos o comprobar que upstream ya los resolvió (`trivy fs apps/desktop`).
 
 | Archivo | Cambio | Motivo |
@@ -48,19 +48,25 @@ hay que conservarlos o comprobar que upstream ya los resolvió (`trivy fs apps/d
 | `core/package.json` | Fuera `@npmcli/arborist`, `pacote`, `request`, `request-progress` y `happy-dom`: son `devDependencies` que ningún archivo usa (las pruebas corren con `jsdom`) | Traían tar 6, pacote 18, sigstore 2, form-data 2.3 y happy-dom 20 |
 | `*/package.json` | `vitest`, `@vitest/ui` y `@vitest/coverage-v8` de 2.1.9 / 3.2.4 a 3.2.6 en todos los workspaces | CVE-2026-47429; además desaparecen vite 5 y vite-node 2 |
 | `src-tauri/utils/Cargo.lock`, `src-tauri/plugins/tauri-plugin-llamacpp/Cargo.lock` | `quinn-proto` 0.11.14 → 0.11.15 (mismas dependencias; el `Cargo.lock` principal ya usaba 0.11.16) | GHSA-4w2j-m93h-cj5j |
+| `package.json` | `tinypool@npm:^1.1.1` → 2.2.0 (interno de vitest 3.2.6) | CVE-2026-104848 y CVE-2026-104849; mismos resultados de pruebas que con 1.1.1 |
+| `src-tauri/Cargo.toml`, `plugins/tauri-plugin-rag/Cargo.toml` | `zip` 0.6 → 9 (solo `deflate`), `calamine` 0.23 → 0.38, `tauri` ≥ 2.12 (2.12.5) y `tauri-plugin-updater` ≥ 2.14 (2.14.1, ya sin zip 4) | CVE-2026-115905 y CVE-2026-115909 |
+| `plugins/tauri-plugin-rag/src/parser.rs` | Celdas de calamine 0.38 (`Data`, `ExcelDateTime`): las fechas de libros con sistema 1904 se pasan al de 1900 (antes lo hacía calamine) y las duraciones salen de `is_duration()`; `name()` de zip 9 devuelve `Result` | API nueva; prueba nueva para fechas 1904 |
+| `src/core/filesystem/commands.rs`, `src/core/cli/updater.rs` | `is_dir()` en vez de revisar `/` final; `enclosed_name()` devuelve `PathBuf`; `SimpleFileOptions` | API de zip 9 |
 
 Verificado en Node 20 y yarn 4.5.3: `yarn install --immutable`, `build:core`, `build:extensions`,
-`build:web` y las 171 pruebas de `@janhq/core` pasan.
+`build:web` y las 171 pruebas de `@janhq/core` pasan; extensiones y `web-app` dan los mismos resultados que
+antes del cambio. En Rust 1.98: `cargo check --all-targets` de la app, las 10 pruebas de `tauri-plugin-rag` y
+las 17 del updater pasan. `trivy fs apps/desktop`: 0 hallazgos altos o críticos.
 
 ## Limitaciones conocidas en F0
 
 - **Motor de inferencia:** el build de CI usa los *stubs* de Jan (`scripts/stub-tauri-resources.mjs`)
   para llama.cpp y MLX. La app abre y muestra la marca, pero no ejecuta modelos locales; el motor real
   se compila desde F1 (HU-04, HU-05).
-- **Dependencias de terceros:** quedan 6 hallazgos altos o críticos (de 100; 4 CVE distintas): `zip` en Rust, que exige subir
-  tauri, tauri-plugin-updater y calamine, y `tinypool`, solo de pruebas. Se reportan en cada CI y están
-  cubiertas por la excepción **EX-003** acotada (vence el 2026-12-31, riesgo R-13); el resto es parte de F1.
-- **Pruebas de Jan:** 13 de las 4294 pruebas de `web-app` fallan con la marca aplicada porque comprueban
+- **Dependencias de terceros:** 0 hallazgos altos o críticos desde el 2026-11-11 (EX-003 cerrada). CI los
+  reporta en cada PR y bloquea si aparece uno nuevo sin excepción.
+- **Pruebas de Jan:** 5 pruebas de `llamacpp-extension` (descarga del *embedder*, que Valkiria quitó) y 13
+  de las 4294 pruebas de `web-app` fallan con la marca aplicada porque comprueban
   el comportamiento original de Jan (etiqueta «Jan», consulta de releases a GitHub, asistente por defecto).
   No forman parte del CI de Valkiria; se adaptan en F1.
 - **Sin firma:** los instaladores de CI no están firmados ni notarizados (F10, HU-26).

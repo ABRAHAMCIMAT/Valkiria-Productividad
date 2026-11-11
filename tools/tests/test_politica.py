@@ -89,21 +89,27 @@ def test_ca_02_cli_excepciones_y_trivyignore_del_repo() -> None:
     assert politica.main(["trivyignore"]) == 0
 
 
-def test_ca_02_excepcion_por_objetivo(capsys: pytest.CaptureFixture[str]) -> None:
-    assert (
-        politica.main(
-            ["vigente", "--tipo", "cve", "--objetivo", "apps/desktop", "--hoy", "2026-11-10"]
-        )
-        == 0
+def test_ca_02_excepcion_por_objetivo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "security").mkdir()
+    (tmp_path / "security/excepciones.toml").write_text(
+        '[[excepcion]]\nid = "EX-009"\ntipo = "cve"\nobjetivo = "apps/desktop"\n'
+        'motivo = "Prueba"\nresponsable = "Oficial de seguridad"\nriesgo = "R-13"\n'
+        "vence = 2026-12-31\n"
     )
-    assert (
-        politica.main(
-            ["vigente", "--tipo", "cve", "--objetivo", "apps/desktop", "--hoy", "2027-01-01"]
-        )
-        == 1
-    )
+    monkeypatch.setattr(politica, "RAIZ", tmp_path)
+    vigente = ["vigente", "--tipo", "cve", "--objetivo", "apps/desktop"]
+    assert politica.main([*vigente, "--hoy", "2026-11-10"]) == 0
+    assert politica.main([*vigente, "--hoy", "2027-01-01"]) == 1
     assert "vencida" in capsys.readouterr().out.lower()
     assert politica.main(["vigente", "--tipo", "cve", "--objetivo", "otro"]) == 1
+
+
+def test_ca_02_fork_de_jan_sin_excepcion_desde_el_cierre_de_ex_003() -> None:
+    """EX-003 se cerró (0 CVE): una CVE nueva en apps/desktop bloquea el PR."""
+    assert politica.cargar_excepciones(politica.RAIZ / "security/excepciones.toml") == []
+    assert politica.main(["vigente", "--tipo", "cve", "--objetivo", "apps/desktop"]) == 1
 
 
 def test_hallazgos_de_sonar_en_markdown(

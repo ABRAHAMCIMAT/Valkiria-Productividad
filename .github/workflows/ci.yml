@@ -173,9 +173,10 @@ jobs:
             --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs llmops/.venv --skip-dirs apps/desktop \
             --exit-code 1 --format json --output reports/trivy.json .
 
-      # Dependencias de terceros del fork de Jan: se reportan siempre y solo pasan con la excepción
-      # vigente EX-003 (security/excepciones.toml). Al vencer, este control vuelve a bloquear.
-      - name: Dependencias del fork de Jan (Trivy · requiere excepción vigente)
+      # Dependencias de terceros del fork de Jan: se reportan siempre. Desde el cierre de EX-003
+      # (2026-11-11) no hay excepción, así que cualquier CVE alta o crítica nueva bloquea hasta
+      # corregirla o registrar una excepción en security/excepciones.toml.
+      - name: Dependencias del fork de Jan (Trivy · 0 CVE o excepción vigente)
         id: trivy_desktop
         continue-on-error: true
         run: |
