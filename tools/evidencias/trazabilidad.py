@@ -25,9 +25,10 @@ import re
 import sys
 import tempfile
 import tomllib
-import xml.etree.ElementTree as ET  # nosec B405 - reportes JUnit propios de CI
 from pathlib import Path
 from typing import Any
+
+from defusedxml import ElementTree
 
 COLUMNAS = [
     "hu",
@@ -43,11 +44,19 @@ COLUMNAS = [
 ]
 
 
+def contiene(base: str, destino: str) -> bool:
+    """``True`` si ``destino`` está dentro de ``base``. Unidades distintas en Windows: no."""
+    try:
+        return os.path.commonpath([base, destino]) == base
+    except ValueError:
+        return False
+
+
 def confinar(ruta: str | Path) -> Path:
     """Solo se leen y escriben archivos del directorio de trabajo o del temporal del sistema."""
     destino = os.path.realpath(ruta)
     permitidas = [os.path.realpath(Path.cwd()), os.path.realpath(tempfile.gettempdir())]
-    if not any(os.path.commonpath([base, destino]) == base for base in permitidas):
+    if not any(contiene(base, destino) for base in permitidas):
         raise ValueError(f"ruta fuera de {permitidas}: {destino}")
     return Path(destino)
 
@@ -58,7 +67,7 @@ def resultados_junit(patrones: list[str]) -> dict[str, str]:
     resultados: dict[str, str] = {}
     for patron in patrones:
         for ruta in glob.glob(patron, recursive=True):
-            for caso in ET.parse(confinar(ruta)).getroot().iter("testcase"):  # noqa: S314  # nosec B314
+            for caso in ElementTree.parse(confinar(ruta)).getroot().iter("testcase"):
                 nombre = re.sub(r"\[.*\]$", "", caso.get("name", ""))
                 if caso.find("failure") is not None or caso.find("error") is not None:
                     estado = "fail"

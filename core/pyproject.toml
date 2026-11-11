@@ -16,6 +16,7 @@ dev = [
   "bandit>=1.9",
   "pip-audit>=2.10",
   "pip-licenses>=5",
+  "defusedxml>=0.7",
 ]
 
 [build-system]

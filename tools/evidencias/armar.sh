@@ -72,9 +72,10 @@ cp security/excepciones.toml "$PKG/L6-seguridad/"
 for f in cierre.md criterios.toml; do
   [[ -f "evidencias/$FASE/$f" && ! "evidencias/$FASE/$f" -ef "$PKG/$f" ]] && cp "evidencias/$FASE/$f" "$PKG/"
 done
-python3 tools/evidencias/trazabilidad.py --criterios "evidencias/$FASE/criterios.toml" \
-  --junit "$TMP/junit/*.xml" --jobs "$PKG/L4-desarrollo/jobs.json" --commit "$SHA" \
-  --salida "$PKG/trazabilidad.csv" || TRAZA_FALLO=1
+# Corre en el entorno de Core, que trae defusedxml para leer JUnit sin riesgo de XXE.
+(cd core && uv run --no-sync python ../tools/evidencias/trazabilidad.py \
+  --criterios "../evidencias/$FASE/criterios.toml" --junit "$TMP/junit/*.xml" \
+  --jobs "$PKG/L4-desarrollo/jobs.json" --commit "$SHA" --salida "$PKG/trazabilidad.csv") || TRAZA_FALLO=1  # NOSONAR
 
 OBLIGATORIOS=(
   L4-desarrollo/sonar-metrics.json L4-desarrollo/jobs.json L4-desarrollo/core.xml L4-desarrollo/llmops.xml
