@@ -71,7 +71,7 @@
 | [ ] | Líder técnico | Carlos Carballo | carlos.carballo@valtre.com | Acta y alcance de F0 |
 | [ ] | Ingeniero LLMOps | Carlos A. Carballo M. | abrahamcimat@me.com | Evidencias L4/L5 y gate de MLflow |
 | [ ] | Oficial de seguridad VALTRE | Pedro de Jesús Lara Luna | pedro.lara@valtre.com | Evidencias L6, incluye aprobar EX-003 |
-| [ ] | Product Owner | Carlos Carballo | carlos.carballo@valtre.com | Decisión R-12; D1 resuelta: repositorio público |
+| [ ] | Product Owner | José Luis Valdez Treviño | luis.valdez@valtre.com | Decisión R-12; D1 resuelta: repositorio público |
 
 **Hallazgos de la prueba de humo resueltos durante F0** (todos de Jan v0.8.8): consulta a `api.github.com` de sus releases en cada arranque, descarga del *embedder* de Hugging Face vía `apps.jan.ai` sin consentimiento, tráfico de fondo de WebView2 hacia Microsoft y `CFBundleIdentifier = jan.ai.app` en su `Info.plist`.
 
