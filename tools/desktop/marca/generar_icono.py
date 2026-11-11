@@ -1,6 +1,6 @@
 """Genera el ícono oficial de Valkiria a partir del logo de VALTRE (riesgo R-09, cerrado).
 
-Fuente: valtre-logo.png (símbolo a color + nombre en blanco sobre fondo transparente, 1228 x 282 px).
+Fuente: valtre-logo.png (símbolo a color + nombre en blanco en fondo transparente, 1228 x 282).
 El ícono usa solo el símbolo, porque el nombre en blanco no se lee en un ícono pequeño: se recorta,
 se centra sobre un cuadrado blanco redondeado (rejilla de íconos de macOS) y se exporta en 1024 px.
 
