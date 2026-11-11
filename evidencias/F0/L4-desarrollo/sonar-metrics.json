@@ -1,0 +1,85 @@
+{
+  "project": "ABRAHAMCIMAT_Valkiria-Productividad",
+  "ref": "pr:11",
+  "git_sha": "ae3e22bf2621976c9989beba5bb1d789973575e1",
+  "phase": null,
+  "exported_at": "2026-11-11T12:23:04.267596+00:00",
+  "quality_gate": {
+    "status": "OK",
+    "conditions": [
+      {
+        "status": "OK",
+        "metricKey": "new_reliability_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_security_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_maintainability_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_coverage",
+        "comparator": "LT",
+        "periodIndex": 1,
+        "errorThreshold": "80",
+        "actualValue": "94.6"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_duplicated_lines_density",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "3",
+        "actualValue": "0.0"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_security_hotspots_reviewed",
+        "comparator": "LT",
+        "periodIndex": 1,
+        "errorThreshold": "100",
+        "actualValue": "100.0"
+      }
+    ]
+  },
+  "metrics": {
+    "coverage": "96.5",
+    "reliability_rating": "1.0",
+    "complexity": "26",
+    "duplicated_lines_density": "0.0",
+    "code_smells": "4",
+    "security_rating": "1.0",
+    "new_coverage": null,
+    "security_hotspots_reviewed": "100.0",
+    "security_hotspots": "0",
+    "security_review_rating": "1.0",
+    "sqale_index": "22",
+    "sqale_rating": "1.0",
+    "bugs": "0",
+    "new_violations": null,
+    "cognitive_complexity": "40",
+    "ncloc": "249",
+    "vulnerabilities": "0",
+    "new_duplicated_lines_density": null
+  },
+  "ncloc_limite": {
+    "limite": 50000,
+    "uso": 0.005,
+    "alerta": false
+  }
+}

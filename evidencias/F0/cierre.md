@@ -4,7 +4,7 @@
 |---|---|
 | Versión | `0.0.1` (interna) |
 | Periodo | 2026-11-10 a 2026-11-11 |
-| Commit de cierre | se completa al fusionar el PR de cierre |
+| Commit verificado | `cf0cf48de32cfa7e2a4846a4bf909cadee542114` (gate de fase: [run 43019508658](https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/43019508658)) |
 | Tag | `fase-0-cierre` |
 | PR de cierre | #11 |
 
@@ -12,7 +12,7 @@
 
 | HU | Título | Estado | CA aprobados / total | PRs |
 |---|---|---|---|---|
-| HU-01 | Aplicación con marca Valkiria | __HU01_ESTADO__ | __HU01_CA__ / 3 | #8 |
+| HU-01 | Aplicación con marca Valkiria | Hecha | 3 / 3 | #8 |
 | HU-02 | Pipeline de integración seguro | Hecha | 3 / 3 | #6, #9 (demo) |
 | HU-03 | Registro de experimentos y trazas | Hecha | 3 / 3 | #7 |
 | HU-29 | Tablero de calidad del código | Hecha (CA-29.4 parcial) | 5 / 5 | #4, #5 (demo), #10 (demo), #11 |
@@ -37,7 +37,7 @@
 | L8 Operación | No aplica | — | N/A |
 | L9 Mejora | Retrospectiva (sección 6) | este documento | ☑ |
 | Trazabilidad | `trazabilidad.csv` (HU → RN → CA → prueba/job/demo → resultado → commit) | raíz | ☑ |
-| Integridad | `manifest.sha256` generado por `tools/evidencias/armar.sh` | raíz | ☑ |
+| Integridad | `manifest-ci.sha256` generado por CI (run 43019508658) y `manifest.sha256` regenerado tras completar esta acta | raíz | ☑ |
 
 ## 3. Resultados de los gates
 
@@ -51,7 +51,7 @@
 | CVE ≥ 7.0 en código propio | 0 | 0 | `L6-seguridad/trivy.json` | ✔ |
 | CVE ≥ 7.0 en el fork de Jan | 0 o excepción vigente | ~100, con EX-003 | `L6-seguridad/trivy-desktop.json` | ✔ con excepción |
 | Tags obligatorios en runs de F0 | 100 % | 100 % | `L5-evaluacion/gate.txt` | ✔ |
-| Conexiones salientes de la app (5 min) | 0 | __EGRESS__ | `L4-desarrollo/escritorio/` | __EGRESS_OK__ |
+| Conexiones salientes de la app (5 min, macOS arm64, macOS x64 y Windows x64) | 0 | 0 | `L4-desarrollo/escritorio/` | ✔ |
 
 ## 4. Excepciones y riesgos aceptados
 
@@ -70,6 +70,8 @@
 - [ ] Ingeniero LLMOps
 - [ ] Oficial de seguridad VALTRE (incluye aprobar EX-003)
 - [ ] Product Owner (decisión R-12; D1 resuelta: repositorio público)
+
+**Hallazgos de la prueba de humo resueltos durante F0** (todos de Jan v0.8.8): consulta a `api.github.com` de sus releases en cada arranque, descarga del *embedder* de Hugging Face vía `apps.jan.ai` sin consentimiento, tráfico de fondo de WebView2 hacia Microsoft y `CFBundleIdentifier = jan.ai.app` en su `Info.plist`.
 
 ## 6. Retrospectiva (L9)
 

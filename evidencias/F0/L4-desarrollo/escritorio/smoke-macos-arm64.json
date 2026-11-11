@@ -1,0 +1,18 @@
+{
+  "so": "macos-arm64",
+  "app": "/Applications/Valkiria Productividad.app",
+  "identidad": {
+    "nombre": "Valkiria Productividad",
+    "nombre_visible": "Valkiria Productividad",
+    "identificador": "com.valtre.valkiria",
+    "version": "0.0.1",
+    "copyright": "© VALTRE. Basado en Jan (Apache 2.0).",
+    "ejecutable": "Valkiria-Productividad"
+  },
+  "errores": [],
+  "conexiones_externas": [],
+  "conexiones_loopback": 0,
+  "viva_al_final": true,
+  "segundos": 300,
+  "ok": true
+}

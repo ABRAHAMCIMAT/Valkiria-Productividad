@@ -1,0 +1,46 @@
+[
+  {
+    "conclusion": "success",
+    "name": "Seguridad"
+  },
+  {
+    "conclusion": "success",
+    "name": "Core \u00b7 macos-x64"
+  },
+  {
+    "conclusion": "success",
+    "name": "Evidencia MLflow (HU-03)"
+  },
+  {
+    "conclusion": "success",
+    "name": "Core \u00b7 macos-arm64"
+  },
+  {
+    "conclusion": "success",
+    "name": "Core \u00b7 windows-x64"
+  },
+  {
+    "conclusion": "success",
+    "name": "SonarQube Cloud"
+  },
+  {
+    "conclusion": "success",
+    "name": "Marca aplicada"
+  },
+  {
+    "conclusion": "success",
+    "name": "Build macOS (universal)"
+  },
+  {
+    "conclusion": "success",
+    "name": "Build y humo Windows x64"
+  },
+  {
+    "conclusion": "success",
+    "name": "Humo macOS \u00b7 x64"
+  },
+  {
+    "conclusion": "success",
+    "name": "Humo macOS \u00b7 arm64"
+  }
+]
