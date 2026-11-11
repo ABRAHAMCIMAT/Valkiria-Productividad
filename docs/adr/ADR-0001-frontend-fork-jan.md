@@ -21,3 +21,11 @@ Hacer un fork de Jan (v0.8.x) como *git subtree* en `apps/desktop/` y aplicar la
 - **Open WebUI:** es una aplicación web, no de escritorio.
 - **LM Studio:** no es open source.
 - **UI propia en Tauri:** mayor costo.
+
+## Implementación en F0 (2026-11-10)
+- **Versión:** Jan `v0.8.8` (`646ab625`), la última publicada. Su `LICENSE` es Apache 2.0 con aviso de Menlo Research; la atribución está en [`NOTICE`](../../NOTICE) y en *Ajustes → General*.
+- **Importación filtrada:** [`tools/desktop/sync-jan.sh`](../../tools/desktop/sync-jan.sh) importa el tag como *subtree* `--squash` **sin** `docs/` (el sitio web de Jan, ~233 MB) ni sus recursos de marketing. Así el fork pesa 32 MB en lugar de 274 MB y no arrastra la marca Jan.
+- **Marca y configuración:** [`tools/desktop/rebrand.py`](../../tools/desktop/rebrand.py) aplica todos los cambios de forma idempotente y falla si upstream modifica un fragmento parchado. La lista de desviaciones está en [`apps/desktop/VALKIRIA.md`](../../apps/desktop/VALKIRIA.md).
+- **Hallazgos de la revisión del fork** (todos corregidos por defecto): updater apuntando a los servidores de Jan con su clave pública, PostHog en la CSP, descarga del catálogo de modelos de Jan desde GitHub en el primer arranque y 10 proveedores remotos activos.
+- **Build de F0:** binario universal de macOS e instaladores de Windows sin firma, con el motor de inferencia como *stub*. El motor real se compila desde F1.
+- **Riesgo nuevo R-13:** ~100 CVE altas o críticas en las dependencias de terceros de Jan v0.8.8, cubiertas por la excepción EX-003 hasta el 2026-12-31.

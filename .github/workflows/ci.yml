@@ -165,14 +165,34 @@ jobs:
           uv run --project core bandit -r core/src llmops/src tools -x tools/tests -f json -o reports/bandit.json || true
           uv run --project core bandit -r core/src llmops/src tools -x tools/tests --severity-level high -q
 
-      - name: Dependencias (Trivy · CVSS ≥ 7.0 bloquea)
+      - name: Dependencias propias (Trivy · CVSS ≥ 7.0 bloquea)
         id: trivy
         continue-on-error: true
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo "$TRIVY_IMAGE" fs \
             --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
-            --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs llmops/.venv --skip-dirs apps/desktop/node_modules \
+            --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs llmops/.venv --skip-dirs apps/desktop \
             --exit-code 1 --format json --output reports/trivy.json .
+
+      # Dependencias de terceros del fork de Jan: se reportan siempre y solo pasan con la excepción
+      # vigente EX-003 (security/excepciones.toml). Al vencer, este control vuelve a bloquear.
+      - name: Dependencias del fork de Jan (Trivy · requiere excepción vigente)
+        id: trivy_desktop
+        continue-on-error: true
+        run: |
+          if [[ ! -d apps/desktop ]]; then echo "Sin fork de Jan"; exit 0; fi
+          set +e
+          docker run --rm -v "$PWD:/repo" -w /repo "$TRIVY_IMAGE" fs \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --skip-dirs apps/desktop/node_modules \
+            --exit-code 1 --format json --output reports/trivy-desktop.json apps/desktop
+          codigo=$?
+          set -e
+          total=$(python3 -c 'import json; print(sum(len(r.get("Vulnerabilities") or []) for r in json.load(open("reports/trivy-desktop.json")).get("Results", [])))')
+          echo "### Dependencias del fork de Jan: $total CVE altas o críticas" >> "$GITHUB_STEP_SUMMARY"
+          if [[ $codigo -ne 0 ]]; then
+            echo "::warning title=Fork de Jan::$total CVE altas o críticas en dependencias de terceros (ver trivy-desktop.json)"
+            python3 tools/security/politica.py vigente --tipo cve --objetivo apps/desktop
+          fi
 
       - name: Dependencias Python (pip-audit · informativo)
         run: |
@@ -223,6 +243,7 @@ jobs:
             semgrep=${{ steps.semgrep.outcome }}
             bandit=${{ steps.bandit.outcome }}
             trivy=${{ steps.trivy.outcome }}
+            trivy-desktop=${{ steps.trivy_desktop.outcome }}
             licencias=${{ steps.licencias.outcome }}
             excepciones=${{ steps.excepciones.outcome }}
             sbom=${{ steps.sbom.outcome }}

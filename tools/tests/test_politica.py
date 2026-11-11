@@ -89,6 +89,23 @@ def test_ca_02_cli_excepciones_y_trivyignore_del_repo() -> None:
     assert politica.main(["trivyignore"]) == 0
 
 
+def test_ca_02_excepcion_por_objetivo(capsys: pytest.CaptureFixture[str]) -> None:
+    assert (
+        politica.main(
+            ["vigente", "--tipo", "cve", "--objetivo", "apps/desktop", "--hoy", "2026-11-10"]
+        )
+        == 0
+    )
+    assert (
+        politica.main(
+            ["vigente", "--tipo", "cve", "--objetivo", "apps/desktop", "--hoy", "2027-01-01"]
+        )
+        == 1
+    )
+    assert "vencida" in capsys.readouterr().out.lower()
+    assert politica.main(["vigente", "--tipo", "cve", "--objetivo", "otro"]) == 1
+
+
 def test_hallazgos_de_sonar_en_markdown(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

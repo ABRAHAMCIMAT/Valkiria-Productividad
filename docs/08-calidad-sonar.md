@@ -114,3 +114,14 @@ La **valkiria-extension** debe tener `package-lock.json` y un script `test:cover
   - `evidencias/F<n>/L6-seguridad/`: vulnerabilidades, *hotspots* y *security rating*.
 - El acta de cierre registra el estado del Quality Gate ([plantilla](../evidencias/plantillas/cierre-fase.md)).
 - Una excepción al gate (por ejemplo, un *hotspot* marcado como "seguro") debe llevar su justificación en Sonar y un registro de riesgo con su vencimiento.
+
+## 6. Exclusiones justificadas
+
+Las únicas reglas desactivadas están en [`sonar-project.properties`](../sonar-project.properties) y solo aplican a `tools/**`:
+
+| Regla | Motivo |
+|---|---|
+| `pythonsecurity:S8707`, `pythonsecurity:S2083` (*path traversal*) | `tools/` contiene CLIs de desarrollo y CI (`rebrand.py`, `smoke.py`, `trazabilidad.py`) cuyo propósito es leer y escribir rutas que indica quien las ejecuta. Aun así, todas confinan sus escrituras con `realpath` + `commonpath`. |
+| `shell:S8541` (`uv` sin `--no-build`) | `armar.sh` solo construye los paquetes propios del repositorio desde `uv.lock` con `--frozen`; las dependencias de terceros llegan como *wheels*. |
+
+El código del producto (`core/`, `llmops/` y la extensión) conserva todas las reglas. Una exclusión nueva requiere un PR con su motivo en esta tabla.

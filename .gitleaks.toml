@@ -9,4 +9,9 @@ description = "Archivos de ejemplo sin secretos reales"
 paths = [
   '''tools/sonar/\.env\.example$''',
   '''(^|/)uv\.lock$''',
+  # Fork de Jan: tokens inventados en las pruebas unitarias del redactor de secretos
+  # (bloque #[cfg(test)] de secrets.rs) y de un diálogo. Revisado el 2026-11-10. El commit
+  # squash del subtree guarda las rutas sin el prefijo apps/desktop/, por eso es opcional.
+  '''^(apps/desktop/)?src-tauri/src/core/agent/secrets\.rs$''',
+  '''^(apps/desktop/)?web-app/src/containers/dialogs/__tests__/SecurityConfigDialog\.test\.tsx$''',
 ]
