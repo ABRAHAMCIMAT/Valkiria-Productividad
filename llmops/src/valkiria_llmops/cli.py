@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import ipaddress
 import os
 
 # Solo lanza el servidor de MLflow con argumentos controlados.
@@ -14,7 +13,10 @@ from pathlib import Path
 
 HOST_POR_DEFECTO = "127.0.0.1"
 PUERTO_POR_DEFECTO = 5000
-URI_POR_DEFECTO = f"http://{HOST_POR_DEFECTO}:{PUERTO_POR_DEFECTO}"
+# MLflow solo escucha en loopback (RN-03.3): ahí HTTP es correcto, el tráfico no sale del equipo.
+URI_POR_DEFECTO = f"http://{HOST_POR_DEFECTO}:{PUERTO_POR_DEFECTO}"  # NOSONAR
+# Únicos hosts admitidos. El comando usa el valor de esta tabla, nunca el texto recibido.
+HOSTS_LOOPBACK = {"127.0.0.1": "127.0.0.1", "::1": "::1"}
 RAIZ_REPO = Path(__file__).resolve().parents[3]
 
 
@@ -24,17 +26,18 @@ def directorio_datos() -> Path:
 
 def comando_servidor(host: str, puerto: int, datos: Path) -> list[str]:
     """Comando de ``mlflow server``. Rechaza cualquier host que no sea loopback (RN-03.3)."""
-    try:
-        loopback = ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        loopback = False
-    if not loopback:
+    host_seguro = HOSTS_LOOPBACK.get(host)
+    if host_seguro is None:
         raise ValueError(f"MLflow solo puede escuchar en loopback (RN-03.3), no en {host!r}")
+    puerto_seguro = int(puerto)
+    if not 1024 <= puerto_seguro <= 65535:
+        raise ValueError(f"Puerto fuera de rango (1024-65535): {puerto_seguro}")
+    # Las rutas llevan prefijo de esquema (sqlite:///, file://): no pueden ser opciones.
     return [
         sys.executable, "-m", "mlflow", "server",
         "--backend-store-uri", f"sqlite:///{(datos / 'mlflow.db').as_posix()}",
         "--artifacts-destination", (datos / "artifacts").as_uri(),
-        "--host", host, "--port", str(puerto),
+        "--host", host_seguro, "--port", str(puerto_seguro),
     ]  # fmt: skip
 
 
