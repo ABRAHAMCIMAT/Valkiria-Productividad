@@ -48,18 +48,22 @@ copiar 'desktop.yml/valkiria-windows-x64/reports/smoke/*' "$PKG/L4-desarrollo/es
 
 # ---------- 2. Pruebas (JUnit) y evidencia de MLflow ----------
 mkdir -p "$TMP/junit"
-(cd core && uv sync -q --frozen --all-groups && uv run pytest -q --junitxml="$TMP/junit/core.xml" \
-   && uv run pytest ../tools/tests -q -o addopts="" -p no:cacheprovider --junitxml="$TMP/junit/tools.xml")
-(cd llmops && uv sync -q --frozen --all-groups && uv run pytest -q --junitxml="$TMP/junit/llmops.xml")
+# uv construye aquí solo los paquetes propios del repositorio, desde uv.lock con --frozen y hashes;
+# las dependencias de terceros se instalan como wheels. Por eso se omite --no-build.
+(cd core && uv sync -q --frozen --all-groups)  # NOSONAR
+(cd core && uv run --no-sync pytest -q --junitxml="$TMP/junit/core.xml")  # NOSONAR
+(cd core && uv run --no-sync pytest ../tools/tests -q -o addopts="" -p no:cacheprovider --junitxml="$TMP/junit/tools.xml")  # NOSONAR
+(cd llmops && uv sync -q --frozen --all-groups)  # NOSONAR
+(cd llmops && uv run --no-sync pytest -q --junitxml="$TMP/junit/llmops.xml")  # NOSONAR
 cp "$TMP"/junit/*.xml "$PKG/L4-desarrollo/"
 
 export VALKIRIA_MLFLOW_HOME="$TMP/mlflow" MLFLOW_TRACKING_URI="http://127.0.0.1:5077"
-(cd llmops && uv run llmops serve --port 5077 > "$TMP/mlflow.log" 2>&1) & MLFLOW_PID=$!
+(cd llmops && uv run --no-sync llmops serve --port 5077 > "$TMP/mlflow.log" 2>&1) & MLFLOW_PID=$!  # NOSONAR
 for _ in $(seq 1 60); do curl -fsS "$MLFLOW_TRACKING_URI/health" >/dev/null 2>&1 && break; sleep 2; done
-(cd llmops && GITHUB_SHA="$SHA" uv run llmops bootstrap >/dev/null \
-   && GITHUB_SHA="$SHA" uv run llmops demo-eval --phase "$FASE" --hu HU-03 \
-   && uv run llmops gate --phase "$FASE" | tee "$PKG/L5-evaluacion/gate.txt" \
-   && uv run llmops export --phase "$FASE" --out "$TMP/export")
+(cd llmops && GITHUB_SHA="$SHA" uv run --no-sync llmops bootstrap >/dev/null)  # NOSONAR
+(cd llmops && GITHUB_SHA="$SHA" uv run --no-sync llmops demo-eval --phase "$FASE" --hu HU-03)  # NOSONAR
+(cd llmops && uv run --no-sync llmops gate --phase "$FASE" | tee "$PKG/L5-evaluacion/gate.txt")  # NOSONAR
+(cd llmops && uv run --no-sync llmops export --phase "$FASE" --out "$TMP/export")  # NOSONAR
 rm -rf "$PKG/L5-evaluacion/mlflow"; cp -R "$TMP/export/mlflow" "$PKG/L5-evaluacion/mlflow"
 
 # ---------- 3. Alcance, trazabilidad y manifiesto ----------

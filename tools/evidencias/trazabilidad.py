@@ -20,8 +20,10 @@ import argparse
 import csv
 import glob
 import json
+import os
 import re
 import sys
+import tempfile
 import tomllib
 import xml.etree.ElementTree as ET  # nosec B405 - reportes JUnit propios de CI
 from pathlib import Path
@@ -41,13 +43,22 @@ COLUMNAS = [
 ]
 
 
+def confinar(ruta: str | Path) -> Path:
+    """Solo se leen y escriben archivos del directorio de trabajo o del temporal del sistema."""
+    destino = os.path.realpath(ruta)
+    permitidas = [os.path.realpath(Path.cwd()), os.path.realpath(tempfile.gettempdir())]
+    if not any(os.path.commonpath([base, destino]) == base for base in permitidas):
+        raise ValueError(f"ruta fuera de {permitidas}: {destino}")
+    return Path(destino)
+
+
 def resultados_junit(patrones: list[str]) -> dict[str, str]:
     """Nombre de prueba (sin parámetros) → ``pass`` / ``fail`` / ``skip``. Un fallo gana."""
     orden = {"skip": 0, "pass": 1, "fail": 2}
     resultados: dict[str, str] = {}
     for patron in patrones:
         for ruta in glob.glob(patron, recursive=True):
-            for caso in ET.parse(ruta).getroot().iter("testcase"):  # noqa: S314  # nosec B314
+            for caso in ET.parse(confinar(ruta)).getroot().iter("testcase"):  # noqa: S314  # nosec B314
                 nombre = re.sub(r"\[.*\]$", "", caso.get("name", ""))
                 if caso.find("failure") is not None or caso.find("error") is not None:
                     estado = "fail"
@@ -63,7 +74,7 @@ def resultados_junit(patrones: list[str]) -> dict[str, str]:
 def conclusiones_jobs(ruta: Path | None) -> dict[str, str]:
     if ruta is None or not ruta.exists():
         return {}
-    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    datos = json.loads(confinar(ruta).read_text(encoding="utf-8"))
     return {
         j["name"]: "pass" if j.get("conclusion") == "success" else str(j.get("conclusion"))
         for j in datos
@@ -126,7 +137,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--salida", type=Path, required=True)
     a = ap.parse_args(argv)
 
-    criterios = tomllib.loads(a.criterios.read_text(encoding="utf-8"))
+    criterios = tomllib.loads(confinar(a.criterios).read_text(encoding="utf-8"))
+    a.salida = confinar(a.salida)
     filas, errores = construir(
         criterios, resultados_junit(a.junit), conclusiones_jobs(a.jobs), a.commit
     )

@@ -105,3 +105,9 @@ def test_sonar_excluye_el_fork_de_jan() -> None:
         for r in rutas
     )
     assert "core/src" in rutas
+
+
+def test_confinar_rutas(tmp_path: Path) -> None:
+    assert trazabilidad.confinar(tmp_path / "x.csv") == (tmp_path / "x.csv").resolve()
+    with pytest.raises(ValueError, match="fuera"):
+        trazabilidad.confinar(Path("/") / "valkiria-no-permitido.csv")
