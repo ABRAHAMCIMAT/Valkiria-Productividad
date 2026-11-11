@@ -182,19 +182,22 @@ Las fuentes (`source_type`) comparten el mismo índice: archivos locales, OneDri
 
 ## 6. Conclusiones para la nueva solución
 
-**Conservar:**
-- Tauri 2 con backend en Rust
-- SQLite con FTS5 y sqlite-vec y el esquema `unified_*`
-- fastembed con e5-small
-- Prompt modular y catálogo diferido de herramientas
-- Skills con `SKILL.md` y helpers Python ejecutados con `uv`
-- Permisos de tres niveles con tarjeta de confirmación
-- Sub-agentes de solo lectura con presupuesto
-- Programador cron
-- Proyectos
+> Esta sección se actualizó con la revisión de arquitectura v2. Ver [02 · Revisión de la arquitectura basada en Azure](02-revision-arquitectura-azure.md) y [03 · Arquitectura de referencia](03-arquitectura-referencia.md).
 
-**Cambiar:**
-- El LLM en la nube por **modelos pequeños open source locales**. Eso obliga a usar prompts mucho más cortos (los de la referencia suman unos 200 KB), pocas herramientas por turno, salida JSON restringida y RAG inyectado.
+**Patrones que se conservan** (reimplementados en Python con LangGraph y LangChain):
+- Prompt modular y catálogo diferido de herramientas
+- Skills con `SKILL.md`
+- Permisos de tres niveles con tarjeta de confirmación (HITL)
+- Sub-agentes de solo lectura con presupuesto
+- Búsqueda híbrida con citas por página
+- Proyectos aislados y programador de tareas
+
+**Lo que cambia:**
+- **LLM en la nube → mini LLMs gratuitos locales.** Eso obliga a usar prompts mucho más cortos (los de la referencia suman unos 200 KB), pocas herramientas por turno, salida JSON restringida y RAG inyectado.
+- **Backend en Rust → Python 3.15** (Valkiria Core).
+- **UI propia → fork de Jan**.
+- **SQLite + sqlite-vec → SQLite + LanceDB**.
+- **Sin LLMOps → MLflow 3**.
 - Las integraciones con Microsoft 365 pasan a ser opcionales (como servidores MCP), para que la base sea 100 % local y sin cuentas.
 
 **Aviso:** los prompts, skills y scripts de la versión de referencia pertenecen a su titular. Se usan solo como referencia de arquitectura; la nueva solución debe escribir su propio código y sus propios prompts.

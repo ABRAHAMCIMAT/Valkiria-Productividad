@@ -1,0 +1,2 @@
+hu,regla,criterio,test,resultado,mlflow_run_id,commit,pr,fase,evidencia
+HU-XX,RN-XX.1,CA-XX.1,tests/test_ca_XX_1_descripcion.py::test_...,pass,<run_id>,<sha>,#<pr>,F<n>,EV-F<n>-L5
