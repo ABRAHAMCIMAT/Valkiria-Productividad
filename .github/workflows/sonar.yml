@@ -141,9 +141,9 @@ jobs:
           {
             echo "### Hallazgos pendientes en Sonar"
             api "issues/search?componentKeys=$KEY&$SCOPE&types=VULNERABILITY,BUG&resolved=false&inNewCodePeriod=true&ps=100" \
-              | python3 -c 'import json,sys; [print(f"- **{i[\"type\"]}** `{i[\"rule\"]}` {i[\"severity\"]} · `{i[\"component\"].split(\":\",1)[-1]}:{i.get(\"line\",\"?\")}` · {i[\"message\"]}") for i in json.load(sys.stdin)["issues"]]'
+              | python3 tools/sonar/hallazgos.py issues
             api "hotspots/search?projectKey=$KEY&$SCOPE&status=TO_REVIEW&ps=100" \
-              | python3 -c 'import json,sys; [print(f"- **HOTSPOT** `{h[\"ruleKey\"]}` {h[\"vulnerabilityProbability\"]} · `{h[\"component\"].split(\":\",1)[-1]}:{h.get(\"line\",\"?\")}` · {h[\"message\"]}") for h in json.load(sys.stdin)["hotspots"]]'
+              | python3 tools/sonar/hallazgos.py hotspots
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       # ---------- Evidencia ----------

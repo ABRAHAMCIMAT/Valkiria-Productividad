@@ -87,3 +87,34 @@ def test_ca_02_cli_licencias(tmp_path: Path, capsys: pytest.CaptureFixture[str])
 def test_ca_02_cli_excepciones_y_trivyignore_del_repo() -> None:
     assert politica.main(["excepciones", "--hoy", "2026-11-10"]) == 0
     assert politica.main(["trivyignore"]) == 0
+
+
+def test_hallazgos_de_sonar_en_markdown(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import io
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sonar"))
+    import hallazgos
+
+    issue = {
+        "type": "VULNERABILITY",
+        "rule": "pythonsecurity:S2076",
+        "severity": "MAJOR",
+        "component": "proj:llmops/src/cli.py",
+        "line": 9,
+        "message": "Inyección",
+    }
+    assert hallazgos.formatear("issues", {"issues": [issue]}) == [
+        "- **VULNERABILITY** `pythonsecurity:S2076` MAJOR · `llmops/src/cli.py:9` · Inyección"
+    ]
+    hotspot = {
+        "ruleKey": "S5332",
+        "vulnerabilityProbability": "LOW",
+        "component": "p:a.py",
+        "message": "m",
+    }
+    assert hallazgos.formatear("hotspots", {"hotspots": [hotspot]})[0].startswith("- **HOTSPOT**")
+    monkeypatch.setattr(sys, "stdin", io.StringIO('{"issues": []}'))
+    assert hallazgos.main(["x", "issues"]) == 0
+    assert "(ninguno)" in capsys.readouterr().out
