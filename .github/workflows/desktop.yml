@@ -111,7 +111,8 @@ jobs:
           path: ${{ runner.temp }}/app
       - name: Instalar en /Applications
         run: |
-          ditto -x -k "$RUNNER_TEMP/app/Valkiria-Productividad-macos.zip" /Applications
+          zip=$(find "$RUNNER_TEMP/app" -name 'Valkiria-Productividad-macos.zip' -print -quit)
+          ditto -x -k "$zip" /Applications
           xattr -dr com.apple.quarantine "/Applications/Valkiria Productividad.app" || true
           lipo -archs "/Applications/Valkiria Productividad.app/Contents/MacOS/Valkiria-Productividad"
       - name: Prueba de humo (identidad, arranque y red)
