@@ -1,7 +1,7 @@
 """Genera el ícono oficial de Valkiria a partir del logo de VALTRE (riesgo R-09, cerrado).
 
-Fuente: valtre-logo.png (símbolo a color + nombre en blanco en fondo transparente, 1228 x 282).
-El ícono usa solo el símbolo, porque el nombre en blanco no se lee en un ícono pequeño: se recorta,
+Fuente: valtre-logo.png (símbolo a color + nombre en negro en fondo transparente, 7468 x 2732).
+El ícono usa solo el símbolo, porque el nombre no se lee en un ícono pequeño: se recorta (~1500 px),
 se centra sobre un cuadrado blanco redondeado (rejilla de íconos de macOS) y se exporta en 1024 px.
 
 Uso: uv run --with pillow python tools/desktop/marca/generar_icono.py
@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw
 
 AQUI = Path(__file__).resolve().parent
 LADO = 1024
-FIN_SIMBOLO = 330  # el nombre en blanco empieza en x = 334 del logo original
+FIN_SIMBOLO = 2300  # el símbolo termina en x ≈ 2244 y el nombre empieza en x ≈ 2374
 MARGEN, RADIO, OCUPACION = 0.09, 0.2, 0.72  # en fracción del lado: rejilla macOS (824/1024)
 FONDO = (255, 255, 255, 255)
 
