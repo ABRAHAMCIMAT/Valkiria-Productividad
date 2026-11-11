@@ -27,6 +27,7 @@ import plistlib
 # Solo herramientas del SO con argumentos controlados.
 import subprocess  # nosec B404
 import sys
+import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -237,10 +238,20 @@ def ejecutable_de(app: Path, so: str, nombre_binario: str = "") -> Path:
     return app
 
 
+def carpeta_de_salida(salida: Path) -> Path:
+    """Solo se escriben reportes dentro del directorio de trabajo o del temporal del sistema."""
+    destino = salida.resolve()
+    permitidas = [Path.cwd().resolve(), Path(tempfile.gettempdir()).resolve()]
+    if not any(destino.is_relative_to(base) for base in permitidas):
+        raise ValueError(f"la carpeta de salida debe estar en {permitidas}: {destino}")
+    destino.mkdir(parents=True, exist_ok=True)
+    return destino
+
+
 def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
     so = "macos" if platform.system() == "Darwin" else "windows"
     r = Resultado(so=f"{so}-{platform.machine().lower()}", app=str(app), segundos=segundos)
-    salida.mkdir(parents=True, exist_ok=True)
+    salida = carpeta_de_salida(salida)
 
     if so == "macos":
         r.identidad = identidad_macos(app)

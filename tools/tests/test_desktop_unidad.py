@@ -274,3 +274,15 @@ def test_ejecutable_de_valida_la_ruta(tmp_path: Path) -> None:
 def test_ejecutar_con_entorno() -> None:
     codigo = "import os; print(os.environ['VK_X'])"
     assert smoke._ejecutar([sys.executable, "-c", codigo], {"VK_X": "valor"}).strip() == "valor"
+
+
+def test_escrituras_confinadas(tmp_path: Path) -> None:
+    assert (
+        rebrand.dentro_de(tmp_path, tmp_path / "a" / "b.json")
+        == (tmp_path / "a" / "b.json").resolve()
+    )
+    with pytest.raises(rebrand.ParcheError, match="fuera"):
+        rebrand.dentro_de(tmp_path / "app", tmp_path / "app" / ".." / "otro.json")
+    assert smoke.carpeta_de_salida(tmp_path / "rep").is_dir()
+    with pytest.raises(ValueError, match="salida"):
+        smoke.carpeta_de_salida(Path("/") / "valkiria-no-permitido")
