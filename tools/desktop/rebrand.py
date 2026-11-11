@@ -209,11 +209,19 @@ PARCHES = [
 _JAN = re.compile(r"\bJan\b")
 
 
+def contiene(base: str, destino: str) -> bool:
+    """``True`` si ``destino`` está dentro de ``base``. Unidades distintas en Windows: no."""
+    try:
+        return os.path.commonpath([base, destino]) == base
+    except ValueError:
+        return False
+
+
 def dentro_de(raiz: Path, ruta: Path) -> Path:
     """Devuelve ``ruta`` normalizada si está dentro de ``raiz``; si no, falla (path traversal)."""
     base = os.path.realpath(raiz)
     destino = os.path.realpath(ruta)
-    if os.path.commonpath([base, destino]) != base:
+    if not contiene(base, destino):
         raise ParcheError(f"ruta fuera de {base}: {destino}")
     return Path(destino)
 

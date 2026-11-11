@@ -238,11 +238,19 @@ def ejecutable_de(app: Path, so: str, nombre_binario: str = "") -> Path:
     return app
 
 
+def contiene(base: str, destino: str) -> bool:
+    """``True`` si ``destino`` está dentro de ``base``. Unidades distintas en Windows: no."""
+    try:
+        return os.path.commonpath([base, destino]) == base
+    except ValueError:
+        return False
+
+
 def carpeta_de_salida(salida: Path) -> Path:
     """Solo se escriben reportes dentro del directorio de trabajo o del temporal del sistema."""
     destino = os.path.realpath(salida)
     permitidas = [os.path.realpath(Path.cwd()), os.path.realpath(tempfile.gettempdir())]
-    if not any(os.path.commonpath([base, destino]) == base for base in permitidas):
+    if not any(contiene(base, destino) for base in permitidas):
         raise ValueError(f"la carpeta de salida debe estar en {permitidas}: {destino}")
     Path(destino).mkdir(parents=True, exist_ok=True)
     return Path(destino)
