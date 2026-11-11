@@ -7976,8 +7976,8 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "webkit2gtk",
- "webview2-com 0.38.2",
- "windows 0.61.3",
+ "webview2-com 0.39.1",
+ "windows 0.62.2",
  "windows-sys 0.60.2",
 ]
 
