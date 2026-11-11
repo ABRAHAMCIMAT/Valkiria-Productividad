@@ -69,7 +69,7 @@
 | ✔ | Rol | Responsable | Correo | Alcance de la aprobación |
 |---|---|---|---|---|
 | [ ] | Líder técnico | Carlos Carballo | carlos.carballo@valtre.com | Acta y alcance de F0 |
-| [ ] | Ingeniero LLMOps | Carlos A. Carballo M. | abrahamcimat@me.com | Evidencias L4/L5 y gate de MLflow |
+| [ ] | Ingeniero LLMOps | Abraham Monsivais | abrahamcimat@me.com | Evidencias L4/L5 y gate de MLflow |
 | [ ] | Oficial de seguridad VALTRE | Pedro de Jesús Lara Luna | pedro.lara@valtre.com | Evidencias L6, incluye aprobar EX-003 |
 | [ ] | Product Owner | José Luis Valdez Treviño | luis.valdez@valtre.com | Decisión R-12; D1 resuelta: repositorio público |
 
