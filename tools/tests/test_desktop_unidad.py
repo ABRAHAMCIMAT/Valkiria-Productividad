@@ -286,3 +286,12 @@ def test_escrituras_confinadas(tmp_path: Path) -> None:
     assert smoke.carpeta_de_salida(tmp_path / "rep").is_dir()
     with pytest.raises(ValueError, match="salida"):
         smoke.carpeta_de_salida(Path("/") / "valkiria-no-permitido")
+
+
+def test_contiene_con_unidades_distintas(monkeypatch: pytest.MonkeyPatch) -> None:
+    def distinta_unidad(_: list[str]) -> str:
+        raise ValueError("Paths don't have the same drive")
+
+    monkeypatch.setattr(smoke.os.path, "commonpath", distinta_unidad)
+    assert smoke.contiene("C:\\a", "D:\\b") is False
+    assert rebrand.contiene("C:\\a", "D:\\b") is False
