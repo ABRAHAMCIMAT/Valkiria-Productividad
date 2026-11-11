@@ -65,7 +65,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
   - Se conservan `LICENSE` y `NOTICE` (Apache 2.0, con atribución a Menlo Research).
   - Se desactivan los proveedores remotos de la nube por defecto.
 - **Core:** Python 3.15 gestionado con `uv` (`requires-python = ">=3.15"`), `ruff`, `mypy --strict`, `pytest`.
-- **CI (GitHub Actions)** con matriz `macos-15 (arm64)`, `macos-15-intel (x64)` y `windows-2022`, que corre (GitHub retiró `macos-13` y `macos-14`):
+- **CI (GitHub Actions)** con matriz `macos-15 (arm64)` y `windows-2022`, que corre (GitHub retiró `macos-13` y `macos-14`; macOS Intel salió de la matriz el 2026-11-11 por la decisión R-12):
   - lint, pruebas y build;
   - Gitleaks, Semgrep, Bandit, pip-audit, Trivy y Syft;
   - OpenSSF Scorecard.
@@ -244,5 +244,5 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 | R-09 | Faltan los recursos de marca oficiales de VALTRE (ícono y textos) | Media | Bajo | Ícono provisional generado en el repo; se reemplaza sin cambiar código | Product Owner |
 | R-10 | El código propio supera el límite de líneas del plan Free de SonarQube Cloud | Baja | Medio | Alerta al 80 % en `export-metrics.sh` (RN-29.6) | Líder técnico |
 | R-11 | onnxruntime sin *wheels* para Python 3.15 (spike de F0) | Alta | Alto | Contingencia 3.14 por plataforma (ADR-0002) o *embedder* alternativo; vence con la primera versión `cp315` | Ingeniero LLMOps |
-| R-12 | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Alta | Alto | Decisión del Product Owner antes de F3 (ver ADR-0002) | Product Owner |
+| R-12 | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | — | — | **Cerrado el 2026-11-11:** Valkiria no soporta Mac Intel. El mínimo de macOS es Apple Silicon M4 o posterior con macOS 27.2+; la app declara `LSMinimumSystemVersion` 27.2 y la prueba de humo de macOS corre en un Mac M4 (ADR-0002) | Product Owner |
 | R-13 | Jan v0.8.8 traía ~100 CVE altas o críticas en dependencias de terceros. El 2026-11-11 se redujeron a 6 hallazgos (4 CVE) con *resolutions* de yarn, la limpieza de dependencias sin uso y `quinn-proto` 0.11.15. Quedan `zip` (Rust, exige tauri 2.12+ y calamine 0.37) y `tinypool` (solo pruebas) | Media | Medio | Reporte en cada CI; excepción EX-003 acotada hasta el 2026-12-31; en F1, subir zip a 9 junto con tauri, tauri-plugin-updater y calamine | Oficial de seguridad |

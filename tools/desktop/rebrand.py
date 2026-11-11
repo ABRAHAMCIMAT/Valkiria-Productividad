@@ -30,6 +30,8 @@ NOMBRE = "Valkiria Productividad"
 NOMBRE_CORTO = "Valkiria"
 FABRICANTE = "VALTRE"
 IDENTIFICADOR = "com.valtre.valkiria"
+# Mínimo de macOS (decisión R-12, 2026-11-11): solo Apple Silicon, M4 o posterior, con macOS 27.2+.
+MACOS_MINIMO = "27.2"
 BINARIO = "Valkiria-Productividad"
 VERSION = "0.0.1"
 ATRIBUCION_ES = (
@@ -190,6 +192,13 @@ PARCHES = [
         "<key>CFBundleURLName</key>\n      <string>jan.ai.app</string>",
         f"<key>CFBundleURLName</key>\n      <string>{IDENTIFICADOR}</string>",
         "nombre del esquema de URL de macOS",
+    ),
+    Parche(
+        "src-tauri/Info.plist",
+        "  <key>NSLocalNetworkUsageDescription</key>",
+        f"  <key>LSMinimumSystemVersion</key>\n  <string>{MACOS_MINIMO}</string>\n"
+        "  <key>NSLocalNetworkUsageDescription</key>",
+        "macOS mínimo: el sistema no abre la app en versiones anteriores (R-12)",
     ),
     Parche(
         "extensions/llamacpp-extension/src/index.ts",

@@ -139,6 +139,7 @@ def macos_simulado(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str,
                 "CFBundleShortVersionString": "0.0.1",
                 "CFBundleExecutable": "Valkiria-Productividad",
                 "NSHumanReadableCopyright": "© VALTRE. Basado en Jan (Apache 2.0).",
+                "LSMinimumSystemVersion": "27.2",
             }
         )
     )

@@ -18,11 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, macos-15-intel, windows-2022]
+        os: [macos-15, windows-2022]
         python: ["3.15", "3.14"]
         include:
           - { os: macos-15, etiqueta: macos-arm64 }
-          - { os: macos-15-intel, etiqueta: macos-x64 }
           - { os: windows-2022, etiqueta: windows-x64 }
     defaults:
       run:

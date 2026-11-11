@@ -34,6 +34,7 @@ Las de marca y privacidad las aplica `tools/desktop/rebrand.py`. Los únicos cam
 | Embedder de RAG | Jan descargaba `all-MiniLM-L6-v2` de Hugging Face (vía `apps.jan.ai`) en el primer arranque sin consentimiento; ahora solo tras aceptar la configuración inicial | RN-01.3 |
 | WebView2 (Windows) | Arranca sin red de fondo, actualización de componentes, SmartScreen ni pings hacia Microsoft (`additionalBrowserArgs`) | RN-01.3 |
 | `Info.plist` (macOS) | `CFBundleIdentifier` y `CFBundleURLName` pasan a `com.valtre.valkiria`; el `Info.plist` propio de Jan sobrescribía el `identifier` de Tauri. El esquema `jan://` se conserva porque lo usan internamente los callbacks | RN-01.4 |
+| macOS mínimo | `LSMinimumSystemVersion` 27.2 en `Info.plist` y build solo `aarch64-apple-darwin`: Apple Silicon M4 o posterior con macOS 27.2+, sin Mac Intel (decisión R-12) | R-12 |
 | Analítica | PostHog fuera de la CSP. Además, la analítica de Jan solo se inicia si el build define `POSTHOG_KEY`, y Valkiria no la define | RN-01.3 |
 
 ## Dependencias (remediación de EX-003, 2026-11-11)

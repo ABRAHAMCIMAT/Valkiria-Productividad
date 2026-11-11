@@ -1,6 +1,7 @@
 """HU-01: marca de Valkiria sobre el fork de Jan y prueba de humo."""
 
 import json
+import plistlib
 import sys
 from pathlib import Path
 
@@ -25,6 +26,12 @@ def test_rn_01_1_y_01_4_identidad_en_tauri() -> None:
     assert conf["productName"] == "Valkiria Productividad"
     assert conf["identifier"] == "com.valtre.valkiria"
     assert conf["bundle"]["publisher"] == "VALTRE"
+
+
+@pytest.mark.skipif(not FORK, reason="apps/desktop no existe")
+def test_r_12_macos_minimo_en_info_plist() -> None:
+    info = plistlib.loads((rebrand.APP / "src-tauri/Info.plist").read_bytes())
+    assert info["LSMinimumSystemVersion"] == rebrand.MACOS_MINIMO == smoke.MACOS_MINIMO == "27.2"
 
 
 @pytest.mark.skipif(not FORK, reason="apps/desktop no existe")
@@ -104,10 +111,13 @@ def test_ca_01_1_valida_identidad() -> None:
         "nombre": "Valkiria Productividad",
         "identificador": "com.valtre.valkiria",
         "copyright": "© VALTRE. Basado en Jan (Apache 2.0).",
+        "macos_minimo": "27.2",
     }
     assert smoke.validar_identidad(buena, "macos") == []
     errores = smoke.validar_identidad({"nombre": "Jan", "identificador": "jan.ai.app"}, "macos")
-    assert len(errores) == 3
+    assert len(errores) == 4  # nombre, identificador, macOS mínimo y mención a Jan
+    viejo = smoke.validar_identidad({**buena, "macos_minimo": "10.13"}, "macos")
+    assert viejo == ["LSMinimumSystemVersion: '10.13' (se espera '27.2')"]
     assert smoke.validar_identidad(
         {"nombre": "Valkiria Productividad", "fabricante": "Otro"}, "windows"
     )

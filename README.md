@@ -8,6 +8,8 @@ Asistente de IA de escritorio de **VALTRE** para **macOS y Windows**, 100 % loca
 
 Todo esto sin enviar datos fuera del equipo y optimizado para laptops de hasta 32 GB de RAM.
 
+**Requisitos mínimos:** Mac con Apple Silicon **M4 o posterior** y **macOS 27.2** o superior (no hay versión para Mac Intel), o Windows x64.
+
 ## Arquitectura en una línea
 
 **Fork de Jan** (Tauri, React y llama.cpp/MLX) → **Valkiria Core** (Python 3.15, FastAPI, LangGraph y LangChain v1, LanceDB, Docling) → **MLflow 3** para LLMOps (trazas, Prompt Registry, evaluación y evidencias por fase).

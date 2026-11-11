@@ -51,6 +51,11 @@ cp "$PKG/L4-desarrollo/sonar-metrics.json" "$PKG/L6-seguridad/" 2>/dev/null || t
 mkdir -p "$PKG/L4-desarrollo/escritorio"
 copiar 'desktop.yml/humo-*/*' "$PKG/L4-desarrollo/escritorio"
 copiar 'desktop.yml/valkiria-windows-x64/reports/smoke/*' "$PKG/L4-desarrollo/escritorio"
+# macOS (R-12): la prueba de humo corre en un Mac M4 con tools/desktop/humo-mac-local.sh --fase.
+M4="evidencias/$FASE/L4-desarrollo/escritorio/humo-macos-m4"
+if [[ -d $M4 && ! $M4 -ef "$PKG/L4-desarrollo/escritorio/humo-macos-m4" ]]; then
+  cp -R "$M4" "$PKG/L4-desarrollo/escritorio/"; echo "   $M4 -> escritorio"
+fi
 
 # ---------- 2. Pruebas (JUnit) y evidencia de MLflow ----------
 mkdir -p "$TMP/junit"
