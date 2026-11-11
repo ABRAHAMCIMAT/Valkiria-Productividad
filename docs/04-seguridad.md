@@ -66,6 +66,7 @@ Marcos de referencia:
 | Etapa | Herramienta | Política de bloqueo |
 |---|---|---|
 | Secretos en el código | **Gitleaks** (pre-commit + CI) | Cualquier hallazgo bloquea |
+| Calidad y seguridad consolidadas | **SonarQube Cloud** en CI y **SonarQube Community** local ([08](08-calidad-sonar.md)), con Bandit, ruff, mypy y ESLint importados | El Quality Gate de código nuevo bloquea: ratings A, 100 % de *hotspots* revisados, duplicación ≤ 3 %, cobertura mínima |
 | SAST Python | **Bandit**, **Semgrep** (reglas `python`, `owasp-top-ten`) | Severidad alta bloquea |
 | SAST TS | **ESLint** (plugin security) + Semgrep | Severidad alta bloquea |
 | Dependencias | **pip-audit**, `npm audit`, **Trivy fs** | CVE ≥ 7.0 sin mitigar bloquea |

@@ -39,7 +39,7 @@ Duración estimada: unas **23 semanas** hasta la versión 1.0 (F0 a F10), con un
 
 | Fase | Objetivo | HU | Etapas LLMOps con gate | Release |
 |---|---|---|---|---|
-| F0 | Repositorio, CI seguro en macOS y Windows, MLflow, fork de Jan con marca Valkiria | HU-01, HU-02, HU-03 | L1, L4, L6 | `0.0.x` interno |
+| F0 | Repositorio, CI seguro en macOS y Windows, Sonar, MLflow, fork de Jan con marca Valkiria | HU-01, HU-02, HU-03, HU-29 | L1, L4, L6 | `0.0.x` interno |
 | F1 | Inferencia local con un catálogo de mini LLMs verificados y elegidos con datos | HU-04, HU-05, HU-06 | L2, L3, L5, L6 | `0.1.0` |
 | F2 | Sidecar Python seguro y supervisado, con chat del agente, historial y trazas | HU-07, HU-08, HU-09 | L4, L5, L6 | `0.2.0` |
 | F3 | Ingesta de documentos, RAG híbrido con citas y derecho al olvido | HU-10, HU-11, HU-12 | L2, L4, L5, L6 | `0.3.0` |
@@ -69,6 +69,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
   - lint, pruebas y build;
   - Gitleaks, Semgrep, Bandit, pip-audit, Trivy y Syft;
   - OpenSSF Scorecard.
+- **Sonar** ([08](08-calidad-sonar.md), HU-29): SonarQube Cloud como Quality Gate requerido en los PRs y SonarQube Community local para el análisis previo al push.
 - **MLflow 3** local (`mlflow server --backend-store-uri sqlite:///mlflow.db`), con los experimentos base y los tags obligatorios.
 - **Gobierno del repositorio:** ADR-0001 a 0012, plantillas de PR, HU y cierre de fase, CODEOWNERS, ramas protegidas y commits firmados.
 
@@ -225,7 +226,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 - El código está fusionado por PR con la plantilla completa (HU, CA y evidencias), con al menos 1 revisión y CI en verde en macOS y Windows.
 - Hay pruebas automatizadas por cada CA (`test_ca_NN_M_*`); la cobertura de Core es ≥ 85 % en las líneas nuevas.
 - Si aplica, el run de evaluación de MLflow está etiquetado (`hu`, `phase`, `git.sha`) y supera el gate.
-- Los escaneos de seguridad no tienen hallazgos de severidad alta.
+- Los escaneos de seguridad no tienen hallazgos de severidad alta y el **Quality Gate de Sonar** está en verde.
 - La documentación y los ADRs están actualizados y la HU aparece en `trazabilidad.csv`.
 
 ## 6. Registro de riesgos (inicial)
