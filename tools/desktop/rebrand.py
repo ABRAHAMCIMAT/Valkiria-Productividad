@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -209,11 +210,12 @@ _JAN = re.compile(r"\bJan\b")
 
 
 def dentro_de(raiz: Path, ruta: Path) -> Path:
-    """Devuelve ``ruta`` resuelta si está dentro de ``raiz``; si no, falla (sin path traversal)."""
-    base, destino = raiz.resolve(), ruta.resolve()
-    if not destino.is_relative_to(base):
+    """Devuelve ``ruta`` normalizada si está dentro de ``raiz``; si no, falla (path traversal)."""
+    base = os.path.realpath(raiz)
+    destino = os.path.realpath(ruta)
+    if os.path.commonpath([base, destino]) != base:
         raise ParcheError(f"ruta fuera de {base}: {destino}")
-    return destino
+    return Path(destino)
 
 
 def _editar_json(app: Path, ruta: Path, cambio: Callable[[dict[str, object]], None]) -> bool:
