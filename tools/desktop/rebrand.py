@@ -178,6 +178,18 @@ PARCHES = [
     set({ loading: true, error: null })""",
         "notas de versión de Jan solo con updater activo",
     ),
+    Parche(
+        "src-tauri/Info.plist",
+        "<key>CFBundleIdentifier</key>\n  <string>jan.ai.app</string>",
+        f"<key>CFBundleIdentifier</key>\n  <string>{IDENTIFICADOR}</string>",
+        "identificador del bundle de macOS (Info.plist propio de Jan)",
+    ),
+    Parche(
+        "src-tauri/Info.plist",
+        "<key>CFBundleURLName</key>\n      <string>jan.ai.app</string>",
+        f"<key>CFBundleURLName</key>\n      <string>{IDENTIFICADOR}</string>",
+        "nombre del esquema de URL de macOS",
+    ),
 ]
 
 _JAN = re.compile(r"\bJan\b")
