@@ -240,12 +240,12 @@ def ejecutable_de(app: Path, so: str, nombre_binario: str = "") -> Path:
 
 def carpeta_de_salida(salida: Path) -> Path:
     """Solo se escriben reportes dentro del directorio de trabajo o del temporal del sistema."""
-    destino = salida.resolve()
-    permitidas = [Path.cwd().resolve(), Path(tempfile.gettempdir()).resolve()]
-    if not any(destino.is_relative_to(base) for base in permitidas):
+    destino = os.path.realpath(salida)
+    permitidas = [os.path.realpath(Path.cwd()), os.path.realpath(tempfile.gettempdir())]
+    if not any(os.path.commonpath([base, destino]) == base for base in permitidas):
         raise ValueError(f"la carpeta de salida debe estar en {permitidas}: {destino}")
-    destino.mkdir(parents=True, exist_ok=True)
-    return destino
+    Path(destino).mkdir(parents=True, exist_ok=True)
+    return Path(destino)
 
 
 def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
