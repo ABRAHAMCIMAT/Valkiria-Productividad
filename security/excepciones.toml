@@ -10,23 +10,8 @@
 # riesgo = "R-NN"
 # vence = 2027-01-31
 
-[[excepcion]]
-id = "EX-001"
-tipo = "licencia"
-objetivo = "huey"
-motivo = "Dependencia de MLflow. El paquete no declara licencia en sus metadatos; su LICENSE es MIT (revisado a mano el 2026-11-10)."
-responsable = "Oficial de seguridad"
-riesgo = "R-07"
-vence = 2027-05-10
-
-[[excepcion]]
-id = "EX-002"
-tipo = "licencia"
-objetivo = "skops"
-motivo = "Dependencia de MLflow. El paquete no declara licencia en sus metadatos; su LICENSE es MIT (revisado a mano el 2026-11-10)."
-responsable = "Oficial de seguridad"
-riesgo = "R-07"
-vence = 2027-05-10
+# EX-001 (huey) y EX-002 (skops) se cerraron el 2026-11-11: sus licencias MIT quedaron como
+# licencias verificadas en security/licencias.toml, fijadas a la versión y al hash del LICENSE.
 
 [[excepcion]]
 id = "EX-003"

@@ -3,6 +3,7 @@
 Uso:
   python3 tools/security/politica.py excepciones [--hoy AAAA-MM-DD]
   python3 tools/security/politica.py licencias <reporte-pip-licenses.json>
+      # el reporte se genera con pip-licenses --with-license-file --no-license-path
   python3 tools/security/politica.py trivyignore   # imprime los CVE con excepción vigente
   python3 tools/security/politica.py vigente --tipo cve --objetivo apps/desktop
 
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import sys
 import tomllib
@@ -65,18 +67,50 @@ def licencia_permitida(expresion: str, permitidas: set[str]) -> bool:
     )
 
 
+def revisar_verificada(
+    paquete: dict[str, str], verificada: dict[str, object], permitidas: set[str]
+) -> str | None:
+    """Comprueba una licencia verificada a mano (``[[verificada]]`` de licencias.toml).
+
+    Vale solo para la versión revisada y el mismo texto de LICENSE (SHA-256). Si el paquete cambia
+    de versión o de texto, vuelve a bloquear hasta que alguien revise el LICENSE nuevo.
+    """
+    nombre, version = paquete.get("Name", "?"), paquete.get("Version", "")
+    if version != verificada.get("version"):
+        return (
+            f"{nombre} {version}: su licencia se verificó para la versión "
+            f"{verificada.get('version')}; revisa el LICENSE de la versión nueva"
+        )
+    texto = paquete.get("LicenseText")
+    if not texto or texto == "UNKNOWN":
+        return f"{nombre} {version}: el reporte no trae el texto de LICENSE (--with-license-file)"
+    if hashlib.sha256(texto.encode("utf-8")).hexdigest() != verificada.get("archivo_sha256"):
+        return f"{nombre} {version}: el texto de LICENSE no coincide con el verificado"
+    if not licencia_permitida(str(verificada.get("licencia", "")), permitidas):
+        return (
+            f"{nombre} {version}: licencia verificada no permitida '{verificada.get('licencia')}'"
+        )
+    return None
+
+
 def validar_licencias(
-    paquetes: list[dict[str, str]], permitidas: set[str], exentos: set[str]
+    paquetes: list[dict[str, str]],
+    permitidas: set[str],
+    exentos: set[str],
+    verificadas: dict[str, dict[str, object]] | None = None,
 ) -> list[str]:
     errores = []
     for p in paquetes:
         nombre = p.get("Name", "?")
-        if nombre.lower() in exentos:
+        if nombre.lower() in exentos or licencia_permitida(p.get("License", "UNKNOWN"), permitidas):
             continue
-        if not licencia_permitida(p.get("License", "UNKNOWN"), permitidas):
-            errores.append(
-                f"{nombre} {p.get('Version', '')}: licencia no permitida '{p.get('License')}'"
-            )
+        if verificada := (verificadas or {}).get(nombre.lower()):
+            if error := revisar_verificada(p, verificada, permitidas):
+                errores.append(error)
+            continue
+        errores.append(
+            f"{nombre} {p.get('Version', '')}: licencia no permitida '{p.get('License')}'"
+        )
     return errores
 
 
@@ -116,13 +150,12 @@ def main(argv: list[str] | None = None) -> int:
         errores = validar_excepciones(excepciones, a.hoy)
         ok = f"{len(excepciones)} excepciones vigentes"
     else:
-        permitidas = {
-            normalizar(x)
-            for x in tomllib.loads((RAIZ / "security/licencias.toml").read_text())["permitidas"]
-        }
+        politica = tomllib.loads((RAIZ / "security/licencias.toml").read_text(encoding="utf-8"))
+        permitidas = {normalizar(x) for x in politica["permitidas"]}
+        verificadas = {str(v["paquete"]).lower(): v for v in politica.get("verificada", [])}
         exentos = {str(x["objetivo"]).lower() for x in excepciones if x.get("tipo") == "licencia"}
         paquetes = json.loads(a.reporte.read_text(encoding="utf-8"))
-        errores = validar_licencias(paquetes, permitidas, exentos)
+        errores = validar_licencias(paquetes, permitidas, exentos, verificadas)
         ok = f"{len(paquetes)} paquetes con licencia permitida"
 
     for err in errores:

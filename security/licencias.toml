@@ -10,3 +10,25 @@ permitidas = [
   "MPL-2.0", "Mozilla Public License 2.0 (MPL 2.0)",
   "Unlicense", "The Unlicense (Unlicense)", "0BSD", "Zlib", "CC0-1.0",
 ]
+
+# Licencias verificadas a mano (RN-02.1): paquetes que no declaran licencia en sus metadatos, pero
+# cuyo archivo LICENSE se revisó. Valen solo para esa versión y ese texto (SHA-256 del LICENSE que
+# reporta pip-licenses --with-license-file): si cambia cualquiera de los dos, CI vuelve a bloquear.
+# Reemplazan a las excepciones EX-001 y EX-002 (2026-11-11).
+[[verificada]]
+paquete = "huey"
+version = "3.5.4"
+licencia = "MIT"
+archivo_sha256 = "a4b2c19135a1e6a43b661f5d817e28dc3f28b621ff969d870e47eb98adcd3250"
+origen = "huey-3.5.4.dist-info/licenses/LICENSE · Copyright (c) 2017 Charles Leifer"
+revisado = 2026-11-11
+responsable = "Oficial de seguridad"
+
+[[verificada]]
+paquete = "skops"
+version = "0.16.0"
+licencia = "MIT"
+archivo_sha256 = "dc6e9951e4c7948f0ef73d5febe90f6cf72561094557c9ae5404ea3cd2ba45dd"
+origen = "skops-0.16.0.dist-info/licenses/LICENSE · Copyright (C) 2021 Hugging Face Inc."
+revisado = 2026-11-11
+responsable = "Oficial de seguridad"

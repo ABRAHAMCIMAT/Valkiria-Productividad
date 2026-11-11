@@ -135,3 +135,50 @@ def test_hallazgos_de_sonar_en_markdown(
     monkeypatch.setattr(sys, "stdin", io.StringIO('{"issues": []}'))
     assert hallazgos.main(["x", "issues"]) == 0
     assert "(ninguno)" in capsys.readouterr().out
+
+
+def test_rn_02_1_licencia_verificada_fijada_a_version_y_hash() -> None:
+    texto = "MIT License\n\nPermission is hereby granted..."
+    verificada: dict[str, object] = {
+        "paquete": "huey",
+        "version": "3.5.4",
+        "licencia": "MIT",
+        "archivo_sha256": politica.hashlib.sha256(texto.encode()).hexdigest(),
+    }
+    paquete = {"Name": "huey", "Version": "3.5.4", "License": "UNKNOWN", "LicenseText": texto}
+    verificadas = {"huey": verificada}
+    assert politica.validar_licencias([paquete], PERMITIDAS, set(), verificadas) == []
+    nueva = politica.validar_licencias(
+        [paquete | {"Version": "3.6.0"}], PERMITIDAS, set(), verificadas
+    )
+    assert "versión 3.5.4" in nueva[0]
+    otro_texto = politica.validar_licencias(
+        [paquete | {"LicenseText": "GPL"}], PERMITIDAS, set(), verificadas
+    )
+    assert "no coincide" in otro_texto[0]
+    sin_texto = politica.validar_licencias(
+        [{k: v for k, v in paquete.items() if k != "LicenseText"}], PERMITIDAS, set(), verificadas
+    )
+    assert "--with-license-file" in sin_texto[0]
+    gpl = politica.validar_licencias(
+        [paquete], PERMITIDAS, set(), {"huey": verificada | {"licencia": "GPL-3.0"}}
+    )
+    assert "verificada no permitida" in gpl[0]
+
+
+def test_rn_02_1_verificadas_del_repo_completas() -> None:
+    datos = politica.tomllib.loads((politica.RAIZ / "security/licencias.toml").read_text())
+    verificadas = datos["verificada"]
+    assert {v["paquete"] for v in verificadas} == {"huey", "skops"}
+    for v in verificadas:
+        assert len(v["archivo_sha256"]) == 64
+        assert v["responsable"]
+        assert v["revisado"]
+        assert politica.licencia_permitida(
+            v["licencia"], set(map(politica.normalizar, datos["permitidas"]))
+        )
+    tipos = {
+        x["objetivo"]
+        for x in politica.cargar_excepciones(politica.RAIZ / "security/excepciones.toml")
+    }
+    assert not tipos & {"huey", "skops"}  # EX-001 y EX-002 cerradas

@@ -208,7 +208,7 @@ jobs:
         run: |
           fallo=0
           for m in core llmops; do
-            uv run --project "$m" pip-licenses --format=json --output-file="reports/licencias-$m.json"
+            uv run --project "$m" pip-licenses --format=json --with-license-file --no-license-path --output-file="reports/licencias-$m.json"
             python3 tools/security/politica.py licencias "reports/licencias-$m.json" || fallo=1
           done
           exit $fallo
