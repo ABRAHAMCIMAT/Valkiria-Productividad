@@ -1,0 +1,2 @@
+# Las evidencias se guardan byte a byte: sus hashes están en manifest.sha256.
+evidencias/** -text
