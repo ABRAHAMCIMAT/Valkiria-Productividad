@@ -22,8 +22,9 @@ Todo esto sin enviar datos fuera del equipo y optimizado para laptops de hasta 3
 | [04 · Seguridad](docs/04-seguridad.md) | STRIDE, OWASP LLM Top 10, SSDF en CI y privacidad |
 | [05 · LLMOps y trazabilidad](docs/05-llmops-trazabilidad.md) | Ciclo L1 a L9, gates, auditoría y evidencias de cierre |
 | [06 · Plan de desarrollo incremental](docs/06-plan-desarrollo-incremental.md) | Fases F0 a F11, DoR, DoD y riesgos |
-| [07 · Historias de usuario](docs/07-historias-usuario.md) | 28 HU con análisis INVEST y versión mejorada |
-| [ADR](docs/adr/README.md) | 12 decisiones de arquitectura |
+| [07 · Historias de usuario](docs/07-historias-usuario.md) | 29 HU con análisis INVEST y versión mejorada |
+| [08 · Calidad del código con Sonar](docs/08-calidad-sonar.md) | SonarQube Cloud (Quality Gate en CI) y Community local |
+| [ADR](docs/adr/README.md) | 13 decisiones de arquitectura |
 | [Evidencias](evidencias/README.md) | Paquetes y plantillas de cierre de fase |
 
 ## Atribución

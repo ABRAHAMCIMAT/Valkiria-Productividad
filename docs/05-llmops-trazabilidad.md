@@ -18,9 +18,9 @@ flowchart LR
 | L1 Alcance y riesgos | ¿Qué problema resolvemos, para quién y con qué riesgos? | GitHub Issues (HU), registro de riesgos | `EV-L1`: HU aprobadas, registro de riesgos, métricas objetivo |
 | L2 Datos | ¿Con qué datos evaluamos o recuperamos y de dónde vienen? | `llmops/evals/*.jsonl` + *dataset card* | `EV-L2`: *dataset card*, SHA-256 del dataset, revisión de PII |
 | L3 Selección de modelos | ¿Qué modelo cumple calidad, latencia, RAM y licencia? | MLflow (experimento `model-selection`) | `EV-L3`: run de benchmark, `catalog.yaml` con licencia y SHA-256 |
-| L4 Desarrollo | ¿Qué cambió en prompts, grafo y herramientas? | MLflow Prompt Registry, Git | `EV-L4`: versiones de prompt, PRs revisados, cobertura de pruebas |
+| L4 Desarrollo | ¿Qué cambió en prompts, grafo y herramientas? | MLflow Prompt Registry, Git, **Sonar** | `EV-L4`: versiones de prompt, PRs revisados, cobertura de pruebas, `sonar-metrics.json` (mantenibilidad, duplicación, cobertura) |
 | L5 Evaluación | ¿La versión candidata supera los umbrales? | `mlflow.genai.evaluate`, Ragas, DeepEval, pytest | `EV-L5`: run de evaluación con métricas y veredicto del gate |
-| L6 Seguridad y cumplimiento | ¿Es segura y cumple licencias? | promptfoo, garak, Gitleaks, Semgrep, Bandit, pip-audit, Trivy, Syft | `EV-L6`: reportes, SBOM, red team, excepciones aprobadas |
+| L6 Seguridad y cumplimiento | ¿Es segura y cumple licencias? | promptfoo, garak, Gitleaks, Semgrep, Bandit, pip-audit, Trivy, Syft, **Sonar** | `EV-L6`: reportes, SBOM, red team, Quality Gate de Sonar (vulnerabilidades y *hotspots*), excepciones aprobadas |
 | L7 Release | ¿Qué exactamente se publicó y quién lo aprobó? | GitHub Releases, atestaciones, minisign | `EV-L7`: tag firmado, checksums, atestación, notas de versión |
 | L8 Operación | ¿Cómo se comporta en uso real? | MLflow Tracing local, feedback 👍/👎, log de auditoría | `EV-L8`: reporte de métricas locales (opt-in), incidentes |
 | L9 Mejora continua | ¿Qué aprendimos y qué sigue? | Retrospectiva, backlog | `EV-L9`: retro, HU nuevas o ajustadas, ADRs actualizados |

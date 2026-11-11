@@ -16,3 +16,4 @@ Formato: contexto, decisión, consecuencias y alternativas. Cada ADR se revisa e
 | [0010](ADR-0010-seguridad-guardrails.md) | Seguridad, guardrails y SSDF |
 | [0011](ADR-0011-catalogo-mini-llm.md) | Catálogo de mini LLMs gratuitos |
 | [0012](ADR-0012-identidad-secretos.md) | Identidad local y secretos |
+| [0013](ADR-0013-calidad-sonar.md) | Calidad del código con Sonar (Cloud + Community local) |

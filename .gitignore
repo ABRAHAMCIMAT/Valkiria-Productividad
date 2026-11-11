@@ -3,3 +3,9 @@ node_modules/
 dist/
 target/
 .env
+
+# Sonar local
+tools/sonar/.env
+.scannerwork/
+core/reports/
+apps/desktop/extensions/valkiria-extension/reports/

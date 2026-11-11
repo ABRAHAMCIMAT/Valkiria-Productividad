@@ -37,6 +37,7 @@ Leyenda: ✔ cumple · ⚠ cumple de forma parcial · ✗ no cumple.
 | [HU-01](#hu-01--aplicación-con-marca-valkiria) | Aplicación con marca Valkiria | F0 | 5 | Must |
 | [HU-02](#hu-02--pipeline-de-integración-seguro) | Pipeline de integración seguro | F0 | 8 | Must |
 | [HU-03](#hu-03--registro-de-experimentos-y-trazas) | Registro de experimentos y trazas | F0 | 5 | Must |
+| [HU-29](#hu-29--tablero-de-calidad-del-código) | Tablero de calidad del código | F0 | 5 | Must |
 | [HU-04](#hu-04--detección-del-perfil-de-hardware) | Detección del perfil de hardware | F1 | 3 | Must |
 | [HU-05](#hu-05--descarga-verificada-de-modelos) | Descarga verificada de modelos | F1 | 5 | Must |
 | [HU-06](#hu-06--selección-de-modelos-basada-en-evidencia) | Selección de modelos basada en evidencia | F1 | 8 | Must |
@@ -179,6 +180,63 @@ CA-03.3 Escenario: Validación de tags
   Dado un run sin el tag git.sha
   Cuando se ejecuta el gate de fase
   Entonces el gate falla indicando el run y el tag faltante
+```
+
+### HU-29 · Tablero de calidad del código
+**Fase:** F0 · **Puntos:** 5 · **Prioridad:** Must · **Depende de:** HU-02 · **ADR:** [ADR-0013](adr/ADR-0013-calidad-sonar.md)
+
+**Borrador:** «Configurar Sonar para llevar estadísticas de calidad, rendimiento y seguridad del código.»
+
+| I | N | V | E | S | T |
+|---|---|---|---|---|---|
+| ✔ | ✗ impone la herramienta | ⚠ no dice quién usa las estadísticas ni para qué | ⚠ "rendimiento" es ambiguo | ✔ | ✗ sin umbrales ni condición de bloqueo |
+
+**Mejoras aplicadas:**
+- La herramienta (Sonar) pasa al ADR-0013.
+- Se nombra a los usuarios del tablero (líder técnico y oficial de seguridad) y la decisión que toman con él.
+- "Rendimiento" se acota: Sonar mide calidad estática y la latencia queda en MLflow (`perf-bench`).
+- Se definen las condiciones del gate y la evidencia exportable.
+
+> **Como** líder técnico de Valkiria, junto con el oficial de seguridad VALTRE, **quiero** ver en un tablero la evolución de la confiabilidad, la seguridad, la mantenibilidad, la duplicación y la cobertura del código propio, y que un cambio que las empeore no pueda fusionarse, **para** sostener la calidad desde el primer commit y presentarla como evidencia en cada cierre de fase.
+
+**Resumen:** cada PR y cada push a `main` se analizan de forma automática y se comparan contra un Quality Gate sobre el código nuevo. Los resultados quedan en un tablero histórico y se exportan como artefacto de evidencia. Los desarrolladores pueden correr el mismo análisis en local antes de hacer push.
+
+**Reglas de negocio**
+- **RN-29.1** Solo se analiza el código propio de Valkiria; el código de terceros (fork de Jan) queda excluido.
+- **RN-29.2** Quality Gate sobre el código nuevo:
+  - Ratings de confiabilidad, seguridad y mantenibilidad en A.
+  - 100 % de los *hotspots* revisados.
+  - Duplicación ≤ 3 %.
+  - Cobertura ≥ 85 %, que se aplica con el gate local "Valkiria" o con `pytest --cov-fail-under` cuando el plan de Cloud no admite gates personalizados.
+- **RN-29.3** Un PR cuyo Quality Gate falla no se puede fusionar a `main`.
+- **RN-29.4** El análisis local no envía código fuera del equipo y solo escucha en `127.0.0.1`.
+- **RN-29.5** Las métricas de cada análisis se exportan con el `git_sha` y se conservan al menos 90 días; las de `main` al cierre de fase pasan a `evidencias/F<n>/`.
+- **RN-29.6** Se vigila el tamaño del código (`ncloc`): al llegar al 80 % del límite del plan, se registra un riesgo y se decide la acción.
+
+**Criterios de aceptación**
+```gherkin
+CA-29.1 Escenario: PR que degrada la calidad
+  Dado un PR que introduce una vulnerabilidad o un hotspot sin revisar en código nuevo
+  Cuando corre el análisis en CI
+  Entonces el check "SonarQube Cloud" falla, el PR muestra el detalle y no se puede fusionar
+
+CA-29.2 Escenario: Tablero histórico
+  Dado tres análisis sucesivos de main
+  Cuando el líder técnico abre el proyecto en Sonar
+  Entonces ve la evolución de bugs, vulnerabilidades, code smells, cobertura y duplicación
+
+CA-29.3 Escenario: Evidencia exportada
+  Dado un análisis terminado en CI
+  Entonces existe el artefacto sonar-metrics.json con el estado del gate, las métricas y el git_sha del commit
+
+CA-29.4 Escenario: Análisis local privado
+  Dado el SonarQube local encendido
+  Cuando un desarrollador ejecuta tools/sonar/scan-local.sh
+  Entonces ve los resultados en http://127.0.0.1:9000 y el servicio no escucha en ninguna interfaz externa
+
+CA-29.5 Escenario: Código de terceros excluido
+  Dado el fork de Jan dentro de apps/desktop
+  Entonces ningún archivo fuera de los módulos propios aparece en el análisis
 ```
 
 ---

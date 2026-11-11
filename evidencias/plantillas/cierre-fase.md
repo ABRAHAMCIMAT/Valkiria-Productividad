@@ -22,6 +22,7 @@
 | L4 Desarrollo | Versiones de prompts, PRs revisados, cobertura ≥ 85 % (líneas nuevas) | `L4-desarrollo/` | ☐ |
 | L5 Evaluación | Runs de evaluación con veredicto del gate | `L5-evaluacion/` | ☐ |
 | L6 Seguridad | Gitleaks, Semgrep, Bandit, pip-audit, Trivy, SBOM y red team | `L6-seguridad/` | ☐ |
+| L4/L6 Sonar | `sonar-metrics.json` de `main` con el Quality Gate en `OK` (ratings, *hotspots*, cobertura, duplicación, `ncloc` contra el límite del plan) | `L4-desarrollo/`, `L6-seguridad/` | ☐ |
 | L7 Release | Checksums, atestación y notas de versión | `L7-release/` | ☐ / N/A |
 | L8 Operación | Métricas del piloto, incidentes | `L8-operacion/` | ☐ / N/A |
 | L9 Mejora | Retrospectiva y backlog ajustado | `L9-mejora/` | ☐ |

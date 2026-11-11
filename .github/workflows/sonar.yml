@@ -1,0 +1,138 @@
+# Análisis de calidad y seguridad con SonarQube Cloud.
+# Documentación: docs/08-calidad-sonar.md · Decisión: docs/adr/ADR-0013-calidad-sonar.md
+#
+# Configuración del repositorio (Settings > Secrets and variables > Actions):
+#   Secret   SONAR_TOKEN          Token de análisis de SonarQube Cloud
+#   Variable SONAR_ORGANIZATION   Clave de la organización en SonarQube Cloud
+#   Variable SONAR_PROJECT_KEY    Clave del proyecto en SonarQube Cloud
+# Sin esta configuración, o mientras no haya código propio, el job termina sin error con un aviso.
+name: Sonar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: sonar-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: SonarQube Cloud
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (historial completo para el código nuevo y el blame)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detectar módulos a analizar
+        id: scope
+        run: bash tools/sonar/sources.sh | tee -a "$GITHUB_OUTPUT"
+
+      - name: Verificar configuración
+        id: config
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          ORG: ${{ vars.SONAR_ORGANIZATION }}
+          KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          HAS_CODE: ${{ steps.scope.outputs.has_code }}
+        run: |
+          if [[ -z "$SONAR_TOKEN" || -z "$ORG" || -z "$KEY" ]]; then
+            echo "::notice title=Sonar sin configurar::Faltan SONAR_TOKEN, SONAR_ORGANIZATION o SONAR_PROJECT_KEY. Ver docs/08-calidad-sonar.md"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [[ "$HAS_CODE" != "true" ]]; then
+            echo "::notice title=Sin código propio::Aún no existen core/ ni valkiria-extension/; no hay nada que analizar."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---------- Valkiria Core (Python 3.15) ----------
+      - name: Instalar uv y Python 3.15
+        if: steps.config.outputs.run == 'true' && hashFiles('core/pyproject.toml') != ''
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+          enable-cache: true
+
+      - name: Reportes de Core (pruebas, cobertura, ruff, bandit, mypy)
+        if: steps.config.outputs.run == 'true' && hashFiles('core/pyproject.toml') != ''
+        working-directory: core
+        # Los gates de pruebas y linters viven en el workflow de CI; aquí solo se generan reportes
+        # para Sonar, por eso no se corta el job si alguno encuentra hallazgos.
+        run: |
+          mkdir -p reports
+          uv sync --frozen --all-groups
+          uv run pytest --cov=src --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml || true
+          uv run ruff check --output-format=json --output-file=reports/ruff.json . || true
+          uv run bandit -r src -f json -o reports/bandit.json || true
+          uv run mypy src > reports/mypy.txt || true
+
+      # ---------- valkiria-extension (TypeScript) ----------
+      - name: Instalar Node.js
+        if: steps.config.outputs.run == 'true' && hashFiles('apps/desktop/extensions/valkiria-extension/package-lock.json') != ''
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/desktop/extensions/valkiria-extension/package-lock.json
+
+      - name: Reportes de la extensión (cobertura, eslint)
+        if: steps.config.outputs.run == 'true' && hashFiles('apps/desktop/extensions/valkiria-extension/package-lock.json') != ''
+        working-directory: apps/desktop/extensions/valkiria-extension
+        run: |
+          mkdir -p reports
+          npm ci
+          npm run test:coverage --if-present || true
+          npx eslint . -f json -o reports/eslint.json || true
+
+      # ---------- Análisis ----------
+      - name: Preparar argumentos
+        if: steps.config.outputs.run == 'true'
+        id: args
+        env:
+          ORG: ${{ vars.SONAR_ORGANIZATION }}
+          KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SOURCES: ${{ steps.scope.outputs.sources }}
+          TESTS: ${{ steps.scope.outputs.tests }}
+        run: |
+          a="-Dsonar.organization=$ORG -Dsonar.projectKey=$KEY -Dsonar.sources=$SOURCES"
+          [[ -n "$TESTS" ]] && a="$a -Dsonar.tests=$TESTS"
+          echo "value=$a" >> "$GITHUB_OUTPUT"
+
+      - name: Análisis SonarQube Cloud (falla si no pasa el Quality Gate)
+        if: steps.config.outputs.run == 'true'
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: ${{ steps.args.outputs.value }}
+
+      # ---------- Evidencia ----------
+      - name: Exportar métricas como evidencia
+        if: always() && steps.config.outputs.run == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          GIT_SHA: ${{ github.sha }}
+          REF: ${{ github.event_name == 'pull_request' && format('pr:{0}', github.event.pull_request.number) || github.ref_name }}
+        run: bash tools/sonar/export-metrics.sh https://sonarcloud.io "$KEY" sonar-metrics.json "$REF"
+
+      - name: Publicar métricas
+        if: always() && steps.config.outputs.run == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sonar-metrics-${{ github.run_id }}
+          path: sonar-metrics.json
+          retention-days: 90
+          if-no-files-found: warn
