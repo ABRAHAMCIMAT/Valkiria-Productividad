@@ -291,7 +291,7 @@ Valkiria Core es *stateless* por petición (el estado vive en el checkpointer o 
 | Aspecto | macOS | Windows |
 |---|---|---|
 | Requisitos mínimos | Apple Silicon M4 o posterior, macOS 27.2+ (sin Mac Intel; decisión R-12) | Windows x64 |
-| Instalador | `.dmg` arm64 con `LSMinimumSystemVersion` 27.2 | `.msi` / NSIS x64 |
+| Instalador | `.app` arm64 con `LSMinimumSystemVersion` 27.2 (zip en CI; `.dmg` firmado y notarizado en F10) | `.msi` / NSIS x64 |
 | Firma | Developer ID + **notarización** + *hardened runtime*; el sidecar se firma con *entitlements* mínimos | **Authenticode** (certificado OV/EV o SignPath para OSS) |
 | WebView | WKWebView | WebView2 (*evergreen*) |
 | Aceleración | Metal (llama.cpp) / MLX | CUDA, Vulkan o CPU (AVX2) |
