@@ -6,6 +6,11 @@
 # F0 compila la app completa con la marca, bun/uv reales e instaladores, pero con el motor de
 # inferencia (llama.cpp/MLX) como stub: el motor real se compila desde F1 (HU-04, HU-05).
 # Ver apps/desktop/VALKIRIA.md y ADR-0001.
+#
+# macOS (decisión R-12, 2026-11-11): solo Apple Silicon M4 o posterior con macOS 27.2+. El .app es
+# arm64 y declara LSMinimumSystemVersion 27.2, así que los runners de GitHub (M1/M2, macOS 15) lo
+# compilan y verifican, pero no pueden abrirlo: la prueba de humo de macOS corre en un Mac M4 con
+# tools/desktop/humo-mac-local.sh, que descarga el artefacto de este workflow.
 name: Desktop
 
 on:
@@ -47,7 +52,7 @@ jobs:
         run: python3 tools/desktop/rebrand.py --check
 
   build-macos:
-    name: Build macOS (universal)
+    name: Build macOS (arm64)
     needs: marca
     runs-on: macos-15
     timeout-minutes: 90
@@ -67,7 +72,7 @@ jobs:
           corepack prepare yarn@4.5.3 --activate
           yarn config set -H enableImmutableInstalls false
           rustup show active-toolchain || rustup toolchain install
-          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
       - name: Dependencias, core y extensiones
         run: make install-and-build
       - name: Íconos, licencia, bun/uv y motor stub
@@ -76,65 +81,28 @@ jobs:
           yarn copy:assets:tauri
           yarn download:bin
           node scripts/stub-tauri-resources.mjs
-      - name: Compilar la app (universal-apple-darwin, sin firma)
-        run: yarn tauri build --target universal-apple-darwin
+      - name: Compilar la app (aarch64-apple-darwin, sin firma)
+        run: yarn tauri build --target aarch64-apple-darwin
+      - name: Verificar arquitectura y macOS mínimo (sin abrir la app)
+        working-directory: apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/macos
+        run: |
+          app="Valkiria Productividad.app"
+          archs=$(lipo -archs "$app/Contents/MacOS/Valkiria-Productividad")
+          minimo=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$app/Contents/Info.plist")
+          echo "Arquitecturas: $archs · LSMinimumSystemVersion: $minimo" | tee -a "$GITHUB_STEP_SUMMARY"
+          [[ $archs == arm64 ]] || { echo "::error::Se esperaba solo arm64 y hay: $archs"; exit 1; }
+          [[ $minimo == 27.2 ]] || { echo "::error::Se esperaba LSMinimumSystemVersion 27.2 y hay: $minimo"; exit 1; }
       - name: Empaquetar la .app
         run: |
-          cd src-tauri/target/universal-apple-darwin/release/bundle
+          cd src-tauri/target/aarch64-apple-darwin/release/bundle
           ditto -c -k --keepParent "macos/Valkiria Productividad.app" "$RUNNER_TEMP/Valkiria-Productividad-macos.zip"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: valkiria-macos-universal
+          name: valkiria-macos-arm64
           path: |
             ${{ runner.temp }}/Valkiria-Productividad-macos.zip
-            apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           retention-days: 30
-
-  humo-macos:
-    name: Humo macOS · ${{ matrix.etiqueta }}
-    needs: build-macos
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: macos-15, etiqueta: arm64 }
-          - { os: macos-15-intel, etiqueta: x64 }
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: valkiria-macos-universal
-          path: ${{ runner.temp }}/app
-      - name: Instalar en /Applications
-        run: |
-          zip=$(find "$RUNNER_TEMP/app" -name 'Valkiria-Productividad-macos.zip' -print -quit)
-          ditto -x -k "$zip" /Applications
-          xattr -dr com.apple.quarantine "/Applications/Valkiria Productividad.app" || true
-          lipo -archs "/Applications/Valkiria Productividad.app/Contents/MacOS/Valkiria-Productividad"
-      - name: Capturar consultas DNS durante la prueba
-        run: |
-          sudo tcpdump -i any -n -l 'udp port 53' > "$RUNNER_TEMP/dns.txt" 2>/dev/null &
-          echo $! > "$RUNNER_TEMP/tcpdump.pid"
-          sleep 2
-      - name: Prueba de humo (identidad, arranque y red)
-        run: python3 tools/desktop/smoke.py --app "/Applications/Valkiria Productividad.app" --segundos "$SEGUNDOS" --salida reports/smoke
-      - name: Nombres DNS consultados (diagnóstico de CA-01.3)
-        if: always()
-        run: |
-          sudo pkill -f "tcpdump -i any" || true
-          mkdir -p reports/smoke
-          grep -oE '(A|AAAA)\? [^ ]+' "$RUNNER_TEMP/dns.txt" | awk '{print $2}' | sort | uniq -c | sort -rn \
-            | tee "reports/smoke/dns-macos-${{ matrix.etiqueta }}.txt"
-      - if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: humo-macos-${{ matrix.etiqueta }}
-          path: reports/smoke/
-          retention-days: 90
 
   windows:
     name: Build y humo Windows x64

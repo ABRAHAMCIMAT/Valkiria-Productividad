@@ -92,7 +92,7 @@ Leyenda: ✔ cumple · ⚠ cumple de forma parcial · ✗ no cumple.
 **Criterios de aceptación**
 ```gherkin
 CA-01.1 Escenario: Identidad visible en macOS y Windows
-  Dado un build de CI para macOS (arm64 y x64) y Windows (x64)
+  Dado un build de CI para macOS (arm64, Apple M4 o posterior con macOS 27.2+) y Windows (x64)
   Cuando el colaborador abre la aplicación
   Entonces la ventana, el menú y el Dock o la barra de tareas muestran "Valkiria Productividad" y el ícono de VALTRE
 
@@ -137,7 +137,7 @@ CA-02.1 Escenario: Secreto detectado bloquea el PR
 CA-02.2 Escenario: Matriz multiplataforma
   Dado un PR válido
   Cuando corre el pipeline
-  Entonces compila y pasa las pruebas en macOS arm64, macOS x64 y Windows x64
+  Entonces compila y pasa las pruebas en macOS arm64 y Windows x64
 
 CA-02.3 Escenario: Evidencia publicada
   Dado un pipeline terminado

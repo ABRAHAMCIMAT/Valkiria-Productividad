@@ -25,7 +25,6 @@ jobs:
       matrix:
         include:
           - { os: macos-15, etiqueta: macos-arm64 }
-          - { os: macos-15-intel, etiqueta: macos-x64 }
           - { os: windows-2022, etiqueta: windows-x64 }
     defaults:
       run:

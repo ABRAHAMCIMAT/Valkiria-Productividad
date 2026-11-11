@@ -15,6 +15,8 @@
       </array>
     </dict>
   </array>
+  <key>LSMinimumSystemVersion</key>
+  <string>27.2</string>
   <key>NSLocalNetworkUsageDescription</key>
   <string>Jan connects to model servers on your local network.</string>
 </dict>

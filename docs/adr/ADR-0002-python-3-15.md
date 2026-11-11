@@ -29,4 +29,10 @@ Consulta a PyPI de las últimas versiones; la verificación real con instalació
 
 **Consecuencias para el plan:**
 1. **onnxruntime:** se activa la contingencia descrita arriba en cuanto F3 lo necesite: *build* 3.14 para Core en macOS arm64 y Windows, registrado como riesgo **R-11** con vencimiento en la primera versión de onnxruntime con *wheels* `cp315`. Mientras tanto se evalúa un *embedder* sin onnxruntime (por ejemplo, `sentence-transformers` sobre torch) como alternativa.
-2. **macOS x64 (Intel):** el frontend (Jan/Tauri) y el esqueleto de Core sí compilan, pero las capacidades de RAG (F3) y OCR (F8) **no tienen dependencias disponibles** para Intel. Se registra como riesgo **R-12** y requiere una decisión del Product Owner antes de F3: (a) soportar Intel con capacidades reducidas, (b) dejar de soportar Intel en 1.0 o (c) compilar las dependencias desde el código fuente (costo alto).
+2. **macOS x64 (Intel):** el frontend (Jan/Tauri) y el esqueleto de Core sí compilan, pero las capacidades de RAG (F3) y OCR (F8) **no tienen dependencias disponibles** para Intel. Se registró como riesgo **R-12**, con tres opciones: (a) soportar Intel con capacidades reducidas, (b) dejar de soportar Intel en 1.0 o (c) compilar las dependencias desde el código fuente (costo alto).
+
+   **Decisión (2026-11-11): opción (b), con un mínimo más alto.** Valkiria para macOS requiere **Apple Silicon M4 o posterior con macOS 27.2 o superior**:
+   - El instalador es solo `arm64` y el `.app` declara `LSMinimumSystemVersion` 27.2, así que macOS no lo abre en versiones anteriores.
+   - El chip M4 es el hardware mínimo soportado y probado. No hay bloqueo técnico por chip: en M1, M2 o M3 con macOS 27.2 la app abre, pero sin soporte.
+   - CI deja de usar `macos-15-intel`. Como los runners de GitHub no cumplen el mínimo, `desktop.yml` compila el `.app` y verifica su arquitectura y su `LSMinimumSystemVersion`, y la prueba de humo de macOS corre en un Mac M4 con `tools/desktop/humo-mac-local.sh`.
+   - Se retiran las columnas de macOS x64 de la tabla anterior de las decisiones futuras.

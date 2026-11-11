@@ -35,6 +35,7 @@ from pathlib import Path
 NOMBRE = "Valkiria Productividad"
 FABRICANTE = "VALTRE"
 IDENTIFICADOR = "com.valtre.valkiria"
+MACOS_MINIMO = "27.2"  # igual que tools/desktop/rebrand.py (R-12)
 
 
 @dataclass
@@ -92,6 +93,7 @@ def identidad_macos(app: Path) -> dict[str, str]:
         "version": str(info.get("CFBundleShortVersionString", "")),
         "copyright": str(info.get("NSHumanReadableCopyright", "")),
         "ejecutable": str(info.get("CFBundleExecutable", "")),
+        "macos_minimo": str(info.get("LSMinimumSystemVersion", "")),
     }
 
 
@@ -205,6 +207,10 @@ def validar_identidad(ident: dict[str, str], so: str) -> list[str]:
     if so == "macos" and ident.get("identificador") != IDENTIFICADOR:
         errores.append(
             f"identificador: {ident.get('identificador')!r} (se espera {IDENTIFICADOR!r})"
+        )
+    if so == "macos" and ident.get("macos_minimo") != MACOS_MINIMO:
+        errores.append(
+            f"LSMinimumSystemVersion: {ident.get('macos_minimo')!r} (se espera {MACOS_MINIMO!r})"
         )
     if so == "windows" and FABRICANTE not in ident.get("fabricante", "") + ident.get(
         "copyright", ""

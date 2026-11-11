@@ -62,7 +62,7 @@
 | EX-003 | Dependencias de terceros de Jan v0.8.8. Acotada después del cierre de 100 a 6 hallazgos (4 CVE): `zip` en Rust y `tinypool`, solo de pruebas (anexo §8) | Oficial de seguridad | 2026-12-31 | R-13 |
 | — | Motor de inferencia como *stub* en el build de F0 | Líder técnico | F1 | ADR-0001 |
 | — | onnxruntime sin *wheels* para Python 3.15 | Ingeniero LLMOps | Antes de F3 | R-11, ADR-0002 |
-| — | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Product Owner | Antes de F3 | R-12, ADR-0002 |
+| — | ~~Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime~~ **Cerrado:** sin soporte para Mac Intel (anexo §8) | Product Owner | — | R-12, ADR-0002 |
 
 ## 5. Aprobaciones (las registra GitHub en el PR de cierre)
 
@@ -89,9 +89,10 @@
 
 **Acciones para F1**
 1. Cerrar EX-003 antes del 2026-12-31: subir `zip` a 9 junto con tauri 2.12+, tauri-plugin-updater 2.14.1 y calamine 0.37, y sacar tinypool 1 (vitest 4). Compilar el motor real de inferencia.
-2. Decidir el soporte de macOS Intel (R-12) y la contingencia de onnxruntime (R-11).
-3. Recibir el ícono oficial de VALTRE (R-09).
-4. Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.
+2. Decidir la contingencia de onnxruntime (R-11). R-12 ya está decidido (anexo §8).
+3. Correr `tools/desktop/humo-mac-local.sh --fase F1` en un Mac M4 con macOS 27.2 como evidencia de CA-01.1 y CA-01.3 en macOS.
+4. Recibir el ícono oficial de VALTRE (R-09).
+5. Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.
 
 ## 7. Anexo posterior al cierre (2026-11-11)
 
@@ -116,5 +117,6 @@ Los commits anteriores a este anexo, incluido el tag `fase-0-cierre`, quedan sin
 | Hallazgo del análisis local | `python:S8786` (expresión regular superlineal) en `tools/desktop/rebrand.py`: se reemplazó por un filtro de *tokens* con prueba unitaria | commit `4ad1634` |
 | **EX-003** · CVE del fork de Jan | De **100 a 6** hallazgos altos o críticos (4 CVE distintas). Se usaron `resolutions` de yarn dentro de la misma versión mayor, se quitaron cinco `devDependencies` de `@janhq/core` sin uso y se subieron vitest a 3.2.6 y `quinn-proto` a 0.11.15. Verificado con `yarn install --immutable`, `build:core`, `build:extensions`, `build:web` y las 171 pruebas de `@janhq/core`. La excepción sigue vigente solo para `zip` (Rust) y `tinypool` (pruebas) | `L6-seguridad/trivy-desktop-remediacion.json`, `apps/desktop/VALKIRIA.md` |
 | OpenSSF Scorecard | `publish_results: true`: el repositorio es público y los resultados se publican firmados por OIDC | `.github/workflows/scorecard.yml` |
+| **R-12** · Soporte de Mac Intel | **Decidido:** no hay versión para Mac Intel. El mínimo de macOS es **Apple Silicon M4 o posterior con macOS 27.2+**. El `.app` es solo arm64 y declara `LSMinimumSystemVersion` 27.2, que macOS hace cumplir; el chip M4 queda como hardware mínimo soportado, sin bloqueo técnico. CI ya no usa `macos-15-intel` y el *ruleset* deja de exigir `Core · macos-x64`. La prueba de humo de macOS pasa a un Mac M4 (`tools/desktop/humo-mac-local.sh`). La ratifica el Product Owner al aprobar esta acta | ADR-0002, `docs/06` (R-12), `tools/desktop/humo-mac-local.sh` |
 
-Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo registra el estado posterior. `trazabilidad.csv` actualiza la fila del análisis local de CA-29.4, y `manifest.sha256` se regeneró.
+Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo registra el estado posterior. `criterios.toml` de F0 conserva los jobs de macOS x64 con los que se cerró la fase; volver a correr su gate sobre un commit nuevo ya no los encontraría. `trazabilidad.csv` actualiza la fila del análisis local de CA-29.4, y `manifest.sha256` se regeneró.
