@@ -578,6 +578,9 @@ export default class llamacpp_extension extends AIEngine implements EmbeddingEng
    */
   private async bootstrapDefaultEmbedder(): Promise<void> {
     try {
+      // Valkiria: Jan descargaba el embedder de Hugging Face (vía apps.jan.ai) en el primer
+      // arranque sin consentimiento, aunque su comentario dice lo contrario (RN-01.3).
+      if (!(await this.hasSetupConsent())) return
       if (await getBackendSetting(EMBEDDER_BOOTSTRAP_KEY)) return
       if (!(await this.hasEmbedderInstalled())) {
         // Set only around the actual fetch, and only when there is one to do:

@@ -115,8 +115,20 @@ jobs:
           ditto -x -k "$zip" /Applications
           xattr -dr com.apple.quarantine "/Applications/Valkiria Productividad.app" || true
           lipo -archs "/Applications/Valkiria Productividad.app/Contents/MacOS/Valkiria-Productividad"
+      - name: Capturar consultas DNS durante la prueba
+        run: |
+          sudo tcpdump -i any -n -l 'udp port 53' > "$RUNNER_TEMP/dns.txt" 2>/dev/null &
+          echo $! > "$RUNNER_TEMP/tcpdump.pid"
+          sleep 2
       - name: Prueba de humo (identidad, arranque y red)
         run: python3 tools/desktop/smoke.py --app "/Applications/Valkiria Productividad.app" --segundos "$SEGUNDOS" --salida reports/smoke
+      - name: Nombres DNS consultados (diagnóstico de CA-01.3)
+        if: always()
+        run: |
+          sudo pkill -f "tcpdump -i any" || true
+          mkdir -p reports/smoke
+          grep -oE '(A|AAAA)\? [^ ]+' "$RUNNER_TEMP/dns.txt" | awk '{print $2}' | sort | uniq -c | sort -rn \
+            | tee "reports/smoke/dns-macos-${{ matrix.etiqueta }}.txt"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -169,9 +181,20 @@ jobs:
           if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\msi.log" -Tail 50; exit $p.ExitCode }
           $exe = Get-ChildItem "$env:ProgramFiles\Valkiria Productividad" -Filter *.exe -Recurse | Where-Object Name -like 'Valkiria*' | Select-Object -First 1
           "VALKIRIA_EXE=$($exe.FullName)" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+      - name: Vaciar la caché DNS
+        shell: pwsh
+        run: Clear-DnsClientCache
       - name: Prueba de humo (identidad, arranque y red)
         working-directory: .
         run: python tools/desktop/smoke.py --app "$VALKIRIA_EXE" --segundos "$SEGUNDOS" --salida reports/smoke
+      - name: Nombres DNS resueltos (diagnóstico de CA-01.3)
+        if: always()
+        working-directory: .
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force reports/smoke | Out-Null
+          Get-DnsClientCache | Select-Object -ExpandProperty Entry | Sort-Object -Unique |
+            Tee-Object -FilePath reports/smoke/dns-windows.txt
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
