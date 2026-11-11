@@ -61,11 +61,16 @@ def es_externa(direccion: str) -> bool:
         host = host.rsplit(":", 1)[0]
     if host in {"", "*", "localhost"}:
         return False
-    try:
-        ip = ipaddress.ip_address(host.split("%")[0])
-    except ValueError:
-        return True  # nombre de host resuelto: lo tratamos como externo
-    return not (ip.is_loopback or ip.is_unspecified)
+    # IPv6 sin corchetes con puerto al final (así lo imprime PowerShell): "::1:80".
+    # Las fuentes siempre incluyen el puerto, así que primero se prueba sin él.
+    candidatos = [host.rsplit(":", 1)[0], host] if ":" in host else [host]
+    for candidato in candidatos:
+        try:
+            ip = ipaddress.ip_address(candidato.split("%")[0])
+        except ValueError:
+            continue
+        return not (ip.is_loopback or ip.is_unspecified)
+    return True  # nombre de host resuelto: lo tratamos como externo
 
 
 def _ejecutar(cmd: list[str], env: dict[str, str] | None = None) -> str:
@@ -99,13 +104,15 @@ def descendientes_macos(pid: int) -> list[int]:
     return pids
 
 
-def conexiones_macos(pids: list[int]) -> list[str]:
+def conexiones_macos(pids: list[int]) -> list[tuple[str, str]]:
+    """Pares ``(dirección remota, proceso)`` de las conexiones de ``pids``."""
     salida = _ejecutar(["lsof", "-nP", "-a", "-p", ",".join(map(str, pids)), "-iTCP", "-iUDP"])
     remotas = []
     for linea in salida.splitlines()[1:]:
-        nombre = linea.split()[-1] if "(" not in linea.split()[-1] else linea.split()[-2]
+        campos = linea.split()
+        nombre = campos[-1] if "(" not in campos[-1] else campos[-2]
         if "->" in nombre:
-            remotas.append(nombre.split("->", 1)[1])
+            remotas.append((nombre.split("->", 1)[1], campos[0]))
     return remotas
 
 
@@ -156,15 +163,26 @@ def descendientes_windows(pid: int) -> list[int]:
     return pids
 
 
-def conexiones_windows(pids: list[int]) -> list[str]:
+def conexiones_windows(pids: list[int]) -> list[tuple[str, str]]:
+    """Pares ``(dirección remota, proceso)`` de las conexiones TCP de ``pids``."""
     lista = ",".join(map(str, pids))
     filtro = f"@({lista}) -contains $_.OwningProcess -and $_.State -ne 'Listen'"
-    formato = '"$($_.RemoteAddress):$($_.RemotePort)"'
+    formato = (
+        '"$($_.RemoteAddress)|$($_.RemotePort)|'
+        '$((Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName)"'
+    )
     salida = _ps(
         "Get-NetTCPConnection -ErrorAction SilentlyContinue | "
         f"Where-Object {{ {filtro} }} | ForEach-Object {{ {formato} }}"
     )
-    return [linea.strip() for linea in salida.splitlines() if linea.strip()]
+    pares = []
+    for linea in salida.splitlines():
+        partes = linea.strip().split("|")
+        if len(partes) == 3:
+            direccion, puerto, proceso = partes
+            remota = f"[{direccion}]:{puerto}" if ":" in direccion else f"{direccion}:{puerto}"
+            pares.append((remota, proceso or "?"))
+    return pares
 
 
 def captura_windows(destino: Path) -> None:
@@ -253,11 +271,12 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
                     f"la app terminó a los {transcurrido:.0f} s (código {proceso.returncode})"
                 )
                 break
-            for remota in conexiones(descendientes(proceso.pid)):
+            for remota, nombre in conexiones(descendientes(proceso.pid)):
                 if es_externa(remota):
-                    if remota not in vistas:
-                        print(f"::error title=CA-01.3::conexión saliente a {remota}")
-                    vistas.add(remota)
+                    vista = f"{remota} ({nombre})"
+                    if vista not in vistas:
+                        print(f"::error title=CA-01.3::conexión saliente a {vista}")
+                    vistas.add(vista)
                 else:
                     r.conexiones_loopback += 1
             if not capturada and time.monotonic() - inicio > 20:

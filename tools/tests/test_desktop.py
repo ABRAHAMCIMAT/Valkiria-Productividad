@@ -90,6 +90,9 @@ def test_proveedores_inactivos() -> None:
         ("140.82.112.3:443", True),
         ("[2606:4700::1111]:443", True),
         ("api.openai.com:443", True),
+        ("::1:80", False),
+        (":::0", False),
+        ("2606:4700::1111:443", True),
     ],
 )
 def test_ca_01_3_clasifica_conexiones(direccion: str, externa: bool) -> None:
