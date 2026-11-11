@@ -24,7 +24,7 @@ Las de marca y privacidad las aplica `tools/desktop/rebrand.py`. Los únicos cam
 | Área | Cambio | Regla |
 |---|---|---|
 | Identidad | `productName` «Valkiria Productividad», binario `Valkiria-Productividad`, `identifier` `com.valtre.valkiria`, `publisher` VALTRE, versión `0.0.1`, título de ventana, `<title>`, `Cargo.toml` (descripción y autores) | RN-01.1, RN-01.4 |
-| Ícono y logo | `src-tauri/icons/icon.png`, `src-tauri/app-icon.png` y `web-app/public/images/jan-logo.png` reemplazados por el ícono **provisional** de `tools/desktop/marca/` (decisión D3, riesgo R-09) | RN-01.1 |
+| Ícono y logo | `src-tauri/icons/icon.png`, `src-tauri/app-icon.png` y `web-app/public/images/jan-logo.png` reemplazados por el ícono oficial, generado del símbolo del logo de VALTRE con `tools/desktop/marca/generar_icono.py` (riesgo R-09, cerrado) | RN-01.1 |
 | Textos | La palabra «Jan» en los 18 idiomas de `web-app/src/locales` y en 7 componentes pasa a «Valkiria» | RN-01.1 |
 | Acerca de | Tarjeta en *Ajustes → General* con «Valkiria Productividad · VALTRE» y la atribución a Jan bajo Apache 2.0 (es/en; el resto de idiomas usa el inglés) | RN-01.2 |
 | Proveedores remotos | Todos los proveedores predefinidos (OpenAI, Anthropic, Gemini, etc.) quedan `active: false` | RN-01.3 |

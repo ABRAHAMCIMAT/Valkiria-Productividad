@@ -91,7 +91,7 @@
 1. ~~Cerrar EX-003 antes del 2026-12-31.~~ Hecho (anexo §9). Compilar el motor real de inferencia.
 2. Decidir la contingencia de onnxruntime (R-11). R-12 ya está decidido (anexo §8).
 3. Correr `tools/desktop/humo-mac-local.sh --fase F1` en un Mac M4 con macOS 27.2 como evidencia de CA-01.1 y CA-01.3 en macOS.
-4. Recibir el ícono oficial de VALTRE (R-09).
+4. ~~Recibir el ícono oficial de VALTRE (R-09).~~ Hecho (anexo §8).
 5. Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.
 
 ## 7. Anexo posterior al cierre (2026-11-11)
@@ -118,6 +118,7 @@ Los commits anteriores a este anexo, incluido el tag `fase-0-cierre`, quedan sin
 | **EX-003** · CVE del fork de Jan | De **100 a 6** hallazgos altos o críticos (4 CVE distintas). Se usaron `resolutions` de yarn dentro de la misma versión mayor, se quitaron cinco `devDependencies` de `@janhq/core` sin uso y se subieron vitest a 3.2.6 y `quinn-proto` a 0.11.15. Verificado con `yarn install --immutable`, `build:core`, `build:extensions`, `build:web` y las 171 pruebas de `@janhq/core`. La excepción sigue vigente solo para `zip` (Rust) y `tinypool` (pruebas) | `L6-seguridad/trivy-desktop-remediacion.json`, `apps/desktop/VALKIRIA.md` |
 | OpenSSF Scorecard | `publish_results: true`: el repositorio es público y los resultados se publican firmados por OIDC | `.github/workflows/scorecard.yml` |
 | **R-12** · Soporte de Mac Intel | **Decidido:** no hay versión para Mac Intel. El mínimo de macOS es **Apple Silicon M4 o posterior con macOS 27.2+**. El `.app` es solo arm64 y declara `LSMinimumSystemVersion` 27.2, que macOS hace cumplir; el chip M4 queda como hardware mínimo soportado, sin bloqueo técnico. CI ya no usa `macos-15-intel` y el *ruleset* deja de exigir `Core · macos-x64`. La prueba de humo de macOS pasa a un Mac M4 (`tools/desktop/humo-mac-local.sh`). La ratifica el Product Owner al aprobar esta acta | ADR-0002, `docs/06` (R-12), `tools/desktop/humo-mac-local.sh` |
+| **R-09** · Ícono oficial | El ícono provisional se reemplazó por el símbolo del logo oficial de VALTRE sobre un cuadrado blanco redondeado (rejilla de íconos de macOS). El nombre en blanco del logo no se usa en el ícono porque no se lee en tamaños pequeños. `rebrand.py --check` verifica que el ícono de la app sea el de la marca | `tools/desktop/marca/` (`valtre-logo.png`, `generar_icono.py`) |
 
 Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo registra el estado posterior. `criterios.toml` de F0 conserva los jobs de macOS x64 con los que se cerró la fase; volver a correr su gate sobre un commit nuevo ya no los encontraría. `trazabilidad.csv` actualiza la fila del análisis local de CA-29.4, y `manifest.sha256` se regeneró.
 
