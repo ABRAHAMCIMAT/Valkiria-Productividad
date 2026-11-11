@@ -111,3 +111,12 @@ def test_confinar_rutas(tmp_path: Path) -> None:
     assert trazabilidad.confinar(tmp_path / "x.csv") == (tmp_path / "x.csv").resolve()
     with pytest.raises(ValueError, match="fuera"):
         trazabilidad.confinar(Path("/") / "valkiria-no-permitido.csv")
+
+
+def test_confinar_admite_runner_temp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(trazabilidad.tempfile, "gettempdir", lambda: str(tmp_path / "otro"))
+    with pytest.raises(ValueError, match="fuera"):
+        trazabilidad.confinar(tmp_path / "x.csv")
+    monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
+    assert trazabilidad.confinar(tmp_path / "x.csv").name == "x.csv"
+    assert trazabilidad.confinar(trazabilidad.RAIZ_REPO / "evidencias").name == "evidencias"

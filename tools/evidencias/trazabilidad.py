@@ -30,6 +30,8 @@ from typing import Any
 
 from defusedxml import ElementTree
 
+RAIZ_REPO = Path(__file__).resolve().parents[2]
+
 COLUMNAS = [
     "hu",
     "regla",
@@ -53,9 +55,10 @@ def contiene(base: str, destino: str) -> bool:
 
 
 def confinar(ruta: str | Path) -> Path:
-    """Solo se leen y escriben archivos del directorio de trabajo o del temporal del sistema."""
+    """Solo lee y escribe en el repositorio, el temporal del sistema o RUNNER_TEMP."""
     destino = os.path.realpath(ruta)
-    permitidas = [os.path.realpath(Path.cwd()), os.path.realpath(tempfile.gettempdir())]
+    bases = [RAIZ_REPO, Path(tempfile.gettempdir()), *filter(None, [os.environ.get("RUNNER_TEMP")])]
+    permitidas = [os.path.realpath(b) for b in bases]
     if not any(contiene(base, destino) for base in permitidas):
         raise ValueError(f"ruta fuera de {permitidas}: {destino}")
     return Path(destino)

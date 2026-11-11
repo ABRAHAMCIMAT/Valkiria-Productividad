@@ -11,7 +11,13 @@ FASE="${1:?Indica la fase, por ejemplo F0}"
 cd "$(git rev-parse --show-toplevel)"
 SHA="${2:-$(git rev-parse HEAD)}"
 PKG="$(python3 -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "${3:-evidencias/$FASE}")"
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"; [[ -n ${MLFLOW_PID:-} ]] && kill "$MLFLOW_PID" 2>/dev/null || true' EXIT
+TMP="$(mktemp -d)"
+limpiar() {
+  # El servidor de MLflow lanza workers propios: se detienen todos los que escuchan en su puerto.
+  pkill -f "mlflow.*--port 5077" 2>/dev/null || true
+  rm -rf "$TMP"
+}
+trap limpiar EXIT
 export VIRTUAL_ENV=""
 if command -v sha256sum >/dev/null; then SHA256=(sha256sum); else SHA256=(shasum -a 256); fi
 
@@ -24,7 +30,7 @@ for wf in ci.yml sonar.yml desktop.yml; do
   id=$(gh run list --workflow "$wf" --commit "$SHA" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
   if [[ -z $id ]]; then echo "::warning::Sin run exitoso de $wf para $SHA"; continue; fi
   echo "-- $wf: run $id"
-  gh run view "$id" --json jobs --jq '.jobs[] | {name, conclusion}' -c >> "$TMP/jobs.ndjson"
+  gh run view "$id" --json jobs --jq '.jobs[] | {name, conclusion} | @json' >> "$TMP/jobs.ndjson"
   gh run download "$id" -D "$TMP/$wf" || true
   echo "$wf,$id,https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/actions/runs/$id" >> "$TMP/runs.csv"
 done
