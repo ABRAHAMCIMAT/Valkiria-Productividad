@@ -1,0 +1,46 @@
+# Gate de cierre de fase (docs/05 §5): arma el paquete de evidencias del commit y falla si falta
+# alguna evidencia obligatoria o un criterio de aceptación no tiene respaldo.
+# Corre a mano o en el PR de cierre con la etiqueta "cierre-de-fase".
+name: Phase gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      fase:
+        description: "Fase a cerrar (F0, F1, ...)"
+        default: "F0"
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  paquete:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'cierre-de-fase')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FASE: ${{ inputs.fase || 'F0' }}
+      SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+          enable-cache: true
+      - name: Armar y verificar el paquete de evidencias
+        run: bash tools/evidencias/armar.sh "$FASE" "$SHA" "$RUNNER_TEMP/evidencias/$FASE"
+      - name: Publicar el paquete
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: evidencias-${{ env.FASE }}-${{ env.SHA }}
+          path: ${{ runner.temp }}/evidencias/
+          include-hidden-files: true
+          retention-days: 90
