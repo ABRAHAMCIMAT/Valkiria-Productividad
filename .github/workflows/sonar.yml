@@ -130,6 +130,22 @@ jobs:
         with:
           args: ${{ steps.args.outputs.value }}
 
+      - name: Detalle del Quality Gate (si falla)
+        if: failure() && steps.config.outputs.run == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SCOPE: ${{ github.event_name == 'pull_request' && format('pullRequest={0}', github.event.pull_request.number) || format('branch={0}', github.ref_name) }}
+        run: |
+          api() { curl -fsS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/$1"; }
+          {
+            echo "### Hallazgos pendientes en Sonar"
+            api "issues/search?componentKeys=$KEY&$SCOPE&types=VULNERABILITY,BUG&resolved=false&inNewCodePeriod=true&ps=100" \
+              | python3 tools/sonar/hallazgos.py issues
+            api "hotspots/search?projectKey=$KEY&$SCOPE&status=TO_REVIEW&ps=100" \
+              | python3 tools/sonar/hallazgos.py hotspots
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
       # ---------- Evidencia ----------
       - name: Exportar métricas como evidencia
         if: always() && steps.config.outputs.run == 'true'
