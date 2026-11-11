@@ -1,0 +1,43 @@
+name: Historia de usuario
+description: Nueva HU (debe pasar INVEST antes de entrar a una fase)
+title: "HU-XX · <título breve>"
+labels: ["historia-usuario"]
+body:
+  - type: input
+    id: fase
+    attributes: { label: Fase, placeholder: "F3" }
+    validations: { required: true }
+  - type: textarea
+    id: borrador
+    attributes: { label: Borrador inicial }
+  - type: textarea
+    id: invest
+    attributes:
+      label: Revisión INVEST
+      value: |
+        | I | N | V | E | S | T |
+        |---|---|---|---|---|---|
+        |   |   |   |   |   |   |
+        Mejoras aplicadas:
+  - type: textarea
+    id: historia
+    attributes:
+      label: Versión mejorada
+      value: |
+        **Como** <persona>, **quiero** <capacidad>, **para** <beneficio>.
+
+        **Resumen:**
+    validations: { required: true }
+  - type: textarea
+    id: reglas
+    attributes: { label: "Reglas de negocio (RN-XX.N)" }
+    validations: { required: true }
+  - type: textarea
+    id: criterios
+    attributes:
+      label: "Criterios de aceptación (CA-XX.N, Gherkin)"
+      render: gherkin
+    validations: { required: true }
+  - type: input
+    id: puntos
+    attributes: { label: "Puntos (≤ 8)" }
