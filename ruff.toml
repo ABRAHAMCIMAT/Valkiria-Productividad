@@ -1,0 +1,9 @@
+# Configuración común de ruff para el código Python propio (core/, llmops/, tools/).
+line-length = 100
+target-version = "py315"
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "A", "C4", "SIM", "PT", "RUF"]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["S101"]

@@ -1,0 +1,12 @@
+# Ganchos locales (opcional, recomendado): `uvx pre-commit install`
+# CI ejecuta los mismos controles; esto solo adelanta el aviso antes del push.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff-check
+      - id: ruff-format

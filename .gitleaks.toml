@@ -1,0 +1,12 @@
+# Gitleaks: reglas por defecto más exclusiones mínimas y justificadas (HU-02, RN-02.1).
+title = "Valkiria Productividad"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Archivos de ejemplo sin secretos reales"
+paths = [
+  '''tools/sonar/\.env\.example$''',
+  '''(^|/)uv\.lock$''',
+]
