@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import ipaddress
 import json
+import os
 import platform
 import plistlib
 
@@ -67,8 +68,11 @@ def es_externa(direccion: str) -> bool:
     return not (ip.is_loopback or ip.is_unspecified)
 
 
-def _ejecutar(cmd: list[str]) -> str:
-    salida = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=60)  # noqa: S603  # nosec B603
+def _ejecutar(cmd: list[str], env: dict[str, str] | None = None) -> str:
+    entorno = {**os.environ, **env} if env else None
+    salida = subprocess.run(  # noqa: S603  # nosec B603
+        cmd, capture_output=True, text=True, check=False, timeout=60, env=entorno
+    )
     return salida.stdout
 
 
@@ -110,16 +114,20 @@ def captura_macos(destino: Path) -> None:
 
 
 # ---------------- Windows ----------------
-def _ps(script: str) -> str:
-    return _ejecutar(["powershell", "-NoProfile", "-NonInteractive", "-Command", script])
+def _ps(script: str, **variables: str) -> str:
+    """Ejecuta PowerShell. Las rutas viajan como variables de entorno ``$env:VK_*``, nunca
+    interpoladas en el script, para que no puedan inyectar comandos."""
+    env = {f"VK_{k.upper()}": v for k, v in variables.items()}
+    return _ejecutar(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], env)
 
 
 def identidad_windows(exe: Path) -> dict[str, str]:
     datos = json.loads(
         _ps(
-            f"(Get-Item -LiteralPath '{exe}').VersionInfo | "
+            "(Get-Item -LiteralPath $env:VK_RUTA).VersionInfo | "
             "Select-Object ProductName,CompanyName,FileDescription,ProductVersion,LegalCopyright "
-            "| ConvertTo-Json"
+            "| ConvertTo-Json",
+            ruta=str(exe),
         )
         or "{}"
     )
@@ -165,7 +173,8 @@ def captura_windows(destino: Path) -> None:
         "$b=[System.Windows.Forms.Screen]::PrimaryScreen.Bounds;"
         "$i=New-Object System.Drawing.Bitmap $b.Width,$b.Height;"
         "$g=[System.Drawing.Graphics]::FromImage($i);$g.CopyFromScreen($b.Location,[System.Drawing.Point]::Empty,$b.Size);"
-        f"$i.Save('{destino}')"
+        "$i.Save($env:VK_DESTINO)",
+        destino=str(destino),
     )
 
 
@@ -187,6 +196,29 @@ def validar_identidad(ident: dict[str, str], so: str) -> list[str]:
     return errores
 
 
+def ejecutable_de(app: Path, so: str, nombre_binario: str = "") -> Path:
+    """Valida la ruta recibida y devuelve el binario a lanzar.
+
+    Solo se aceptan un bundle ``.app`` (con un nombre de binario simple tomado de su Info.plist)
+    o un ``.exe`` existente; cualquier otra cosa se rechaza antes de ejecutar nada.
+    """
+    app = app.resolve(strict=True)
+    if so == "macos":
+        if (
+            app.suffix != ".app"
+            or not nombre_binario
+            or Path(nombre_binario).name != nombre_binario
+        ):
+            raise ValueError(f"no es un bundle .app válido: {app}")
+        binario = (app / "Contents" / "MacOS" / nombre_binario).resolve(strict=True)
+        if app not in binario.parents:
+            raise ValueError(f"el binario sale del bundle: {binario}")
+        return binario
+    if app.suffix.lower() != ".exe" or not app.is_file():
+        raise ValueError(f"no es un .exe válido: {app}")
+    return app
+
+
 def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
     so = "macos" if platform.system() == "Darwin" else "windows"
     r = Resultado(so=f"{so}-{platform.machine().lower()}", app=str(app), segundos=segundos)
@@ -194,11 +226,11 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
 
     if so == "macos":
         r.identidad = identidad_macos(app)
-        ejecutable = app / "Contents" / "MacOS" / r.identidad["ejecutable"]
+        ejecutable = ejecutable_de(app, so, r.identidad["ejecutable"])
         descendientes, conexiones, captura = descendientes_macos, conexiones_macos, captura_macos
     else:
         r.identidad = identidad_windows(app)
-        ejecutable = app
+        ejecutable = ejecutable_de(app, so)
         descendientes, conexiones, captura = (
             descendientes_windows,
             conexiones_windows,
@@ -206,7 +238,8 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
         )
     r.errores += validar_identidad(r.identidad, so)
 
-    proceso = subprocess.Popen(  # noqa: S603  # nosec B603
+    # Herramienta de CI: lanza la app recién instalada, validada por ejecutable_de().
+    proceso = subprocess.Popen(  # noqa: S603  # nosec B603  # NOSONAR
         [str(ejecutable)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
     vistas: set[str] = set()

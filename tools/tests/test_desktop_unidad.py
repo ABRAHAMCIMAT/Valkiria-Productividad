@@ -142,6 +142,8 @@ def macos_simulado(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str,
             }
         )
     )
+    (app / "Contents" / "MacOS").mkdir()
+    (app / "Contents" / "MacOS" / "Valkiria-Productividad").write_bytes(b"")
     estado: dict[str, Any] = {
         "app": app,
         "conexiones": ["127.0.0.1:1337"],
@@ -221,7 +223,11 @@ def test_funciones_windows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
         "Get-NetTCPConnection": "127.0.0.1:1337\n\n20.1.1.1:443\n",
     }
 
-    def ps(script: str) -> str:
+    recibidas: list[dict[str, str]] = []
+
+    def ps(script: str, **variables: str) -> str:
+        recibidas.append(variables)
+        assert "'" not in script.split("VK_")[0][-3:]  # las rutas no se interpolan
         return next((v for k, v in respuestas.items() if k in script), "")
 
     monkeypatch.setattr(smoke, "_ps", ps)
@@ -229,8 +235,36 @@ def test_funciones_windows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     assert smoke.validar_identidad(ident, "windows") == []
     assert sorted(smoke.descendientes_windows(10)) == [10, 11, 12]
     assert smoke.conexiones_windows([10, 11]) == ["127.0.0.1:1337", "20.1.1.1:443"]
-    smoke.captura_windows(tmp_path / "v.png")  # no falla aunque PowerShell no exista
+    smoke.captura_windows(tmp_path / "v.png")
+    assert recibidas[0] == {"ruta": str(tmp_path / "x.exe")}
+    assert recibidas[-1] == {"destino": str(tmp_path / "v.png")}
 
 
 def test_ejecutar_y_ps_reales() -> None:
     assert "hola" in smoke._ejecutar([sys.executable, "-c", "print('hola')"])
+
+
+def test_ejecutable_de_valida_la_ruta(tmp_path: Path) -> None:
+    app = tmp_path / "V.app"
+    (app / "Contents" / "MacOS").mkdir(parents=True)
+    (app / "Contents" / "MacOS" / "bin").write_bytes(b"")
+    assert smoke.ejecutable_de(app, "macos", "bin").name == "bin"
+    for nombre in ("", "../../otro", "sub/bin"):
+        with pytest.raises((ValueError, FileNotFoundError)):
+            smoke.ejecutable_de(app, "macos", nombre)
+    carpeta = tmp_path / "NoEsApp"
+    carpeta.mkdir()
+    with pytest.raises(ValueError, match="bundle"):
+        smoke.ejecutable_de(carpeta, "macos", "bin")
+    exe = tmp_path / "Valkiria.exe"
+    exe.write_bytes(b"")
+    assert smoke.ejecutable_de(exe, "windows") == exe.resolve()
+    with pytest.raises(ValueError, match="exe"):
+        smoke.ejecutable_de(carpeta, "windows")
+    with pytest.raises(FileNotFoundError):
+        smoke.ejecutable_de(tmp_path / "falta.exe", "windows")
+
+
+def test_ejecutar_con_entorno() -> None:
+    codigo = "import os; print(os.environ['VK_X'])"
+    assert smoke._ejecutar([sys.executable, "-c", codigo], {"VK_X": "valor"}).strip() == "valor"
