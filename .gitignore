@@ -9,3 +9,16 @@ tools/sonar/.env
 .scannerwork/
 core/reports/
 apps/desktop/extensions/valkiria-extension/reports/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+reports/
+mlruns/
+mlflow.db

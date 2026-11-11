@@ -6,6 +6,7 @@ cd "$(dirname "$0")/../.."
 
 SOURCE_CANDIDATES=(
   core/src
+  llmops/src
   apps/desktop/extensions/valkiria-extension/src
   llmops/evals
   llmops/redteam
@@ -13,6 +14,8 @@ SOURCE_CANDIDATES=(
 )
 TEST_CANDIDATES=(
   core/tests
+  llmops/tests
+  tools/tests
   apps/desktop/extensions/valkiria-extension/tests
 )
 

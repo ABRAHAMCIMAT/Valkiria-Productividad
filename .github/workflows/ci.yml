@@ -1,0 +1,171 @@
+# CI de Valkiria: calidad de Core en la matriz macOS/Windows y análisis de seguridad (HU-02).
+# Política de bloqueo: docs/04-seguridad.md §5 y RN-02.1. Las excepciones viven en security/excepciones.toml.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core · ${{ matrix.etiqueta }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, etiqueta: macos-arm64 }
+          - { os: macos-15-intel, etiqueta: macos-x64 }
+          - { os: windows-2022, etiqueta: windows-x64 }
+    defaults:
+      run:
+        shell: bash
+        working-directory: core
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+          enable-cache: true
+      - name: Instalar dependencias (uv.lock con hashes)
+        run: uv sync --frozen --all-groups
+      - name: Lint y formato
+        run: uv run ruff check . ../tools && uv run ruff format --check . ../tools
+      - name: Tipos (mypy --strict)
+        run: uv run mypy
+      - name: Pruebas de Core (cobertura ≥ 85 %)
+        run: uv run pytest --junitxml=reports/junit-${{ matrix.etiqueta }}.xml
+      - name: Pruebas de tools/
+        run: uv run pytest ../tools/tests -o addopts="" -p no:cacheprovider
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pruebas-core-${{ matrix.etiqueta }}
+          path: core/reports/
+          retention-days: 90
+          if-no-files-found: warn
+
+  seguridad:
+    name: Seguridad
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GITLEAKS_IMAGE: ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+      SEMGREP_IMAGE: semgrep/semgrep:1.185.0@sha256:67518c174185a2043fdbed16c70631b79209499b3671178e7194379b48295a0d
+      TRIVY_IMAGE: aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb
+      SYFT_IMAGE: anchore/syft:v1.57.1@sha256:03215d0e98b661d0ecbc8575dbc14d65be1743b5de5df6410aecb7e80f95b060
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # Gitleaks revisa todo el historial
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+          enable-cache: true
+      - name: Preparar
+        run: |
+          mkdir -p reports
+          uv sync --project core --frozen --all-groups
+          python3 tools/security/politica.py trivyignore > reports/.trivyignore
+
+      # Cada escáner corre aunque otro falle; el paso final aplica la política con sus resultados.
+      - name: Secretos (Gitleaks)
+        id: gitleaks
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo \
+            --config /repo/.gitleaks.toml --redact --exit-code 1 \
+            --report-format json --report-path /repo/reports/gitleaks.json
+
+      - name: SAST (Semgrep · python, owasp-top-ten, typescript)
+        id: semgrep
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" semgrep scan \
+            --config p/python --config p/owasp-top-ten --config p/typescript \
+            --metrics off --exclude apps/desktop --exclude '**/tests/**' \
+            --severity ERROR --error --json --output reports/semgrep.json
+
+      - name: SAST Python (Bandit · severidad alta bloquea)
+        id: bandit
+        continue-on-error: true
+        run: |
+          uv run --project core bandit -r core/src tools -x tools/tests -f json -o reports/bandit.json || true
+          uv run --project core bandit -r core/src tools -x tools/tests --severity-level high -q
+
+      - name: Dependencias (Trivy · CVSS ≥ 7.0 bloquea)
+        id: trivy
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo "$TRIVY_IMAGE" fs \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs apps/desktop/node_modules \
+            --exit-code 1 --format json --output reports/trivy.json .
+
+      - name: Dependencias Python (pip-audit · informativo)
+        run: |
+          uv export --project core --frozen --all-groups --no-emit-project --format requirements-txt > reports/requirements-core.txt
+          uv run --project core pip-audit -r reports/requirements-core.txt --require-hashes --disable-pip \
+            -f json -o reports/pip-audit.json || echo "::warning::pip-audit encontró vulnerabilidades; revisa reports/pip-audit.json"
+
+      - name: Licencias (lista permitida)
+        id: licencias
+        continue-on-error: true
+        run: |
+          uv run --project core pip-licenses --format=json --output-file=reports/licencias-core.json
+          python3 tools/security/politica.py licencias reports/licencias-core.json
+
+      - name: Excepciones vigentes
+        id: excepciones
+        continue-on-error: true
+        run: python3 tools/security/politica.py excepciones
+
+      - name: SBOM CycloneDX (Syft)
+        id: sbom
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/repo" "$SYFT_IMAGE" dir:/repo \
+            --exclude './.git/**' --exclude '**/node_modules/**' --exclude './**/.venv/**' \
+            -o cyclonedx-json=/repo/reports/sbom.cdx.json
+
+      - name: Publicar reportes de seguridad (90 días, RN-02.2)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: seguridad-${{ github.sha }}
+          path: reports/
+          include-hidden-files: true
+          retention-days: 90
+
+      - name: Aplicar política de bloqueo (RN-02.1)
+        env:
+          RESULTADOS: >-
+            gitleaks=${{ steps.gitleaks.outcome }}
+            semgrep=${{ steps.semgrep.outcome }}
+            bandit=${{ steps.bandit.outcome }}
+            trivy=${{ steps.trivy.outcome }}
+            licencias=${{ steps.licencias.outcome }}
+            excepciones=${{ steps.excepciones.outcome }}
+            sbom=${{ steps.sbom.outcome }}
+        run: |
+          fallo=0
+          for r in $RESULTADOS; do
+            echo "| ${r%%=*} | ${r#*=} |" >> resumen.md
+            [[ ${r#*=} == success ]] || { echo "::error title=Bloqueado por ${r%%=*}::Revisa el artefacto seguridad-${{ github.sha }}"; fallo=1; }
+          done
+          { echo "### Seguridad"; echo "| Control | Resultado |"; echo "|---|---|"; cat resumen.md; } >> "$GITHUB_STEP_SUMMARY"
+          exit $fallo

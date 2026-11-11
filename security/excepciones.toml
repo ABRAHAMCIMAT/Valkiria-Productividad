@@ -1,0 +1,11 @@
+# Excepciones a la política de seguridad (RN-02.4). Cada entrada necesita responsable, motivo,
+# riesgo asociado y fecha de vencimiento; CI falla si alguna está vencida o incompleta.
+#
+# [[excepcion]]
+# id = "EX-001"
+# tipo = "licencia"            # licencia | cve | sast | secreto
+# objetivo = "paquete-ejemplo"  # paquete, CVE o regla afectada
+# motivo = "Por qué se acepta temporalmente"
+# responsable = "Oficial de seguridad"
+# riesgo = "R-NN"
+# vence = 2027-01-31

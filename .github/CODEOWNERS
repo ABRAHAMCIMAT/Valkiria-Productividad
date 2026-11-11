@@ -1,0 +1,13 @@
+# Aprobaciones requeridas por área (docs/05-llmops-trazabilidad.md §5 y §6).
+# Hoy los cuatro roles los cubre la misma cuenta; al sumar personas, cambia cada línea por su equipo
+# (por ejemplo, @org/llmops) sin tocar el resto.
+#   Líder técnico · Ingeniero LLMOps · Oficial de seguridad · Product Owner
+
+*                       @ABRAHAMCIMAT
+/core/                  @ABRAHAMCIMAT
+/apps/desktop/          @ABRAHAMCIMAT
+/llmops/                @ABRAHAMCIMAT
+/evidencias/            @ABRAHAMCIMAT
+/security/              @ABRAHAMCIMAT
+/.github/               @ABRAHAMCIMAT
+/docs/adr/              @ABRAHAMCIMAT
