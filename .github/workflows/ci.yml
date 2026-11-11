@@ -144,7 +144,8 @@ jobs:
         id: gitleaks
         continue-on-error: true
         run: |
-          docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo \
+          # --log-opts=HEAD: solo la historia del commit bajo prueba, no las demás ramas del repo.
+          docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo --log-opts="HEAD" \
             --config /repo/.gitleaks.toml --redact --exit-code 1 \
             --report-format json --report-path /repo/reports/gitleaks.json
 
