@@ -49,14 +49,70 @@ jobs:
         run: uv run pytest --junitxml=reports/junit-${{ matrix.etiqueta }}.xml
       - name: Pruebas de tools/
         run: uv run pytest ../tools/tests -o addopts="" -p no:cacheprovider
+      - name: LLMOps · dependencias, lint, tipos y pruebas
+        working-directory: llmops
+        run: |
+          uv sync --frozen --all-groups
+          uv run ruff check . && uv run ruff format --check .
+          uv run mypy
+          uv run pytest --junitxml=reports/junit-${{ matrix.etiqueta }}.xml
       - name: Publicar resultados
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: pruebas-core-${{ matrix.etiqueta }}
-          path: core/reports/
+          name: pruebas-${{ matrix.etiqueta }}
+          path: |
+            core/reports/
+            llmops/reports/
           retention-days: 90
           if-no-files-found: warn
+
+  evidencia-mlflow:
+    name: Evidencia MLflow (HU-03)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: llmops
+    env:
+      MLFLOW_TRACKING_URI: http://127.0.0.1:5000
+      VALKIRIA_MLFLOW_HOME: ${{ github.workspace }}/.mlflow
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Levantar MLflow solo en 127.0.0.1 (RN-03.3)
+        run: |
+          nohup uv run llmops serve > "$RUNNER_TEMP/mlflow.log" 2>&1 &
+          for _ in $(seq 1 60); do curl -fsS "$MLFLOW_TRACKING_URI/health" >/dev/null 2>&1 && break; sleep 2; done
+          curl -fsS "$MLFLOW_TRACKING_URI/health"
+          if ss -ltnH | awk '{print $4}' | grep -E ':5000$' | grep -vE '^(127\.0\.0\.1|\[::1\]):'; then
+            echo "::error::MLflow escucha fuera de loopback"; exit 1
+          fi
+      - name: Experimentos base y run de ejemplo etiquetado (CA-03.1)
+        run: |
+          uv run llmops bootstrap
+          uv run llmops demo-eval --phase F0 --hu HU-03
+      - name: Gate de tags (CA-03.3)
+        run: uv run llmops gate --phase F0
+      - name: Exportar evidencia (CA-03.2)
+        run: |
+          uv run llmops export --phase F0 --out "$RUNNER_TEMP/evidencias/F0"
+          (cd "$RUNNER_TEMP/evidencias/F0" && sha256sum -c manifest.sha256)
+      - name: Publicar evidencia
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: evidencia-mlflow-F0-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/evidencias/F0/
+            ${{ runner.temp }}/mlflow.log
+          retention-days: 90
 
   seguridad:
     name: Seguridad
@@ -80,6 +136,7 @@ jobs:
         run: |
           mkdir -p reports
           uv sync --project core --frozen --all-groups
+          uv sync --project llmops --frozen --all-groups
           python3 tools/security/politica.py trivyignore > reports/.trivyignore
 
       # Cada escáner corre aunque otro falle; el paso final aplica la política con sus resultados.
@@ -104,8 +161,8 @@ jobs:
         id: bandit
         continue-on-error: true
         run: |
-          uv run --project core bandit -r core/src tools -x tools/tests -f json -o reports/bandit.json || true
-          uv run --project core bandit -r core/src tools -x tools/tests --severity-level high -q
+          uv run --project core bandit -r core/src llmops/src tools -x tools/tests -f json -o reports/bandit.json || true
+          uv run --project core bandit -r core/src llmops/src tools -x tools/tests --severity-level high -q
 
       - name: Dependencias (Trivy · CVSS ≥ 7.0 bloquea)
         id: trivy
@@ -113,21 +170,28 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo "$TRIVY_IMAGE" fs \
             --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
-            --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs apps/desktop/node_modules \
+            --ignorefile reports/.trivyignore --skip-dirs core/.venv --skip-dirs llmops/.venv --skip-dirs apps/desktop/node_modules \
             --exit-code 1 --format json --output reports/trivy.json .
 
       - name: Dependencias Python (pip-audit · informativo)
         run: |
           uv export --project core --frozen --all-groups --no-emit-project --format requirements-txt > reports/requirements-core.txt
-          uv run --project core pip-audit -r reports/requirements-core.txt --require-hashes --disable-pip \
-            -f json -o reports/pip-audit.json || echo "::warning::pip-audit encontró vulnerabilidades; revisa reports/pip-audit.json"
+          uv export --project llmops --frozen --all-groups --no-emit-project --format requirements-txt > reports/requirements-llmops.txt
+          for m in core llmops; do
+            uv run --project core pip-audit -r "reports/requirements-$m.txt" --require-hashes --disable-pip \
+              -f json -o "reports/pip-audit-$m.json" || echo "::warning::pip-audit encontró vulnerabilidades en $m; revisa reports/pip-audit-$m.json"
+          done
 
       - name: Licencias (lista permitida)
         id: licencias
         continue-on-error: true
         run: |
-          uv run --project core pip-licenses --format=json --output-file=reports/licencias-core.json
-          python3 tools/security/politica.py licencias reports/licencias-core.json
+          fallo=0
+          for m in core llmops; do
+            uv run --project "$m" pip-licenses --format=json --output-file="reports/licencias-$m.json"
+            python3 tools/security/politica.py licencias "reports/licencias-$m.json" || fallo=1
+          done
+          exit $fallo
 
       - name: Excepciones vigentes
         id: excepciones

@@ -79,6 +79,17 @@ jobs:
           uv run bandit -r src ../tools -x ../tools/tests -f json -o reports/bandit.json || true
           uv run mypy src > reports/mypy.txt || true
 
+      - name: Reportes de LLMOps (pruebas, cobertura, ruff, bandit, mypy)
+        if: steps.config.outputs.run == 'true' && hashFiles('llmops/pyproject.toml') != ''
+        working-directory: llmops
+        run: |
+          mkdir -p reports
+          uv sync --frozen --all-groups
+          uv run pytest --cov=src --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml || true
+          uv run ruff check --output-format=json --output-file=reports/ruff.json . || true
+          uv run bandit -r src -f json -o reports/bandit.json || true
+          uv run mypy src > reports/mypy.txt || true
+
       # ---------- valkiria-extension (TypeScript) ----------
       - name: Instalar Node.js
         if: steps.config.outputs.run == 'true' && hashFiles('apps/desktop/extensions/valkiria-extension/package-lock.json') != ''

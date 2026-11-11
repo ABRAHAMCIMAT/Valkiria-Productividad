@@ -1,0 +1,5 @@
+{"id": "fmt-001", "entrada": "Devuelve el estado de la tarea", "salida": "{\"estado\": \"ok\"}"}
+{"id": "fmt-002", "entrada": "Lista dos archivos", "salida": "{\"archivos\": [\"a.docx\", \"b.xlsx\"]}"}
+{"id": "fmt-003", "entrada": "Resume en un campo", "salida": "{\"resumen\": \"Reunión de planeación de VALTRE\"}"}
+{"id": "fmt-004", "entrada": "Cuenta las páginas", "salida": "{\"paginas\": 12}"}
+{"id": "fmt-005", "entrada": "Indica si hay riesgos", "salida": "{\"riesgos\": false}"}
