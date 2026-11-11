@@ -65,10 +65,13 @@
 | — | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Product Owner | Antes de F3 | R-12, ADR-0002 |
 
 ## 5. Aprobaciones (las registra GitHub en el PR de cierre)
-- [ ] Líder técnico
-- [ ] Ingeniero LLMOps
-- [ ] Oficial de seguridad VALTRE (incluye aprobar EX-003)
-- [ ] Product Owner (decisión R-12; D1 resuelta: repositorio público)
+
+| ✔ | Rol | Responsable | Correo | Alcance de la aprobación |
+|---|---|---|---|---|
+| [ ] | Líder técnico | Carlos Carballo | carlos.carballo@valtre.com | Acta y alcance de F0 |
+| [ ] | Ingeniero LLMOps | Carlos A. Carballo M. | abrahamcimat@me.com | Evidencias L4/L5 y gate de MLflow |
+| [ ] | Oficial de seguridad VALTRE | Pedro de Jesús Lara Luna | pedro.lara@valtre.com | Evidencias L6, incluye aprobar EX-003 |
+| [ ] | Product Owner | Carlos Carballo | carlos.carballo@valtre.com | Decisión R-12; D1 resuelta: repositorio público |
 
 **Hallazgos de la prueba de humo resueltos durante F0** (todos de Jan v0.8.8): consulta a `api.github.com` de sus releases en cada arranque, descarga del *embedder* de Hugging Face vía `apps.jan.ai` sin consentimiento, tráfico de fondo de WebView2 hacia Microsoft y `CFBundleIdentifier = jan.ai.app` en su `Info.plist`.
 
