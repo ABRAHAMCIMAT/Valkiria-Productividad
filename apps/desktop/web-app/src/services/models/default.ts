@@ -58,6 +58,8 @@ export class DefaultModelsService implements ModelsService {
   }
 
   async fetchModelCatalog(): Promise<ModelCatalog> {
+    // Valkiria: sin URL configurada no hay catálogo remoto (RN-01.3).
+    if (!MODEL_CATALOG_URL) return [] as unknown as ModelCatalog
     try {
       const response = await fetch(MODEL_CATALOG_URL)
 
@@ -78,6 +80,8 @@ export class DefaultModelsService implements ModelsService {
   }
 
   async fetchLatestJanModel(): Promise<CatalogModel | null> {
+    // Valkiria: sin URL configurada no se consulta el modelo recomendado de Jan (RN-01.3).
+    if (!LATEST_JAN_MODEL_URL) return null
     try {
       const response = await fetch(LATEST_JAN_MODEL_URL)
 

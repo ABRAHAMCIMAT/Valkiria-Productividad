@@ -1,8 +1,8 @@
 [package]
 name = "Jan"
 version = "0.8.5"
-description = "Use offline LLMs with your own data. Run open source models like Llama2 or Falcon on your internal computers/servers."
-authors = ["Jan <service@jan.ai>"]
+description = "Valkiria Productividad: asistente de IA local de VALTRE."
+authors = ["VALTRE"]
 license = "Apache-2.0"
 repository = "https://github.com/janhq/jan"
 edition = "2021"

@@ -4,6 +4,7 @@ Uso:
   python3 tools/security/politica.py excepciones [--hoy AAAA-MM-DD]
   python3 tools/security/politica.py licencias <reporte-pip-licenses.json>
   python3 tools/security/politica.py trivyignore   # imprime los CVE con excepción vigente
+  python3 tools/security/politica.py vigente --tipo cve --objetivo apps/desktop
 
 Solo usa la biblioteca estándar para poder correr en cualquier job de CI.
 """
@@ -89,12 +90,27 @@ def main(argv: list[str] | None = None) -> int:
     lic = sub.add_parser("licencias")
     lic.add_argument("reporte", type=Path)
     sub.add_parser("trivyignore")
+    v = sub.add_parser("vigente", help="Éxito si hay una excepción vigente para el objetivo")
+    v.add_argument("--tipo", required=True, choices=sorted(TIPOS))
+    v.add_argument("--objetivo", required=True)
+    v.add_argument("--hoy", type=dt.date.fromisoformat, default=dt.date.today())
     a = ap.parse_args(argv)
 
     excepciones = cargar_excepciones(RAIZ / "security/excepciones.toml")
+    if a.cmd == "vigente":
+        for x in excepciones:
+            if x.get("tipo") == a.tipo and x.get("objetivo") == a.objetivo:
+                if not validar_excepciones([x], a.hoy):
+                    print(f"Excepción vigente {x['id']} hasta {x['vence']}: {x['motivo']}")
+                    return 0
+                print(f"::error title=Excepción vencida::{x['id']} venció el {x['vence']}")
+                return 1
+        print(f"::error title=Sin excepción::no hay excepción {a.tipo} para {a.objetivo}")
+        return 1
     if a.cmd == "trivyignore":
         vigentes = [x for x in excepciones if not validar_excepciones([x], dt.date.today())]
-        print("\n".join(str(x["objetivo"]) for x in vigentes if x["tipo"] == "cve"))
+        ids = [str(x["objetivo"]) for x in vigentes if x["tipo"] == "cve"]
+        print("\n".join(i for i in ids if i.startswith(("CVE-", "GHSA-"))))
         return 0
     if a.cmd == "excepciones":
         errores = validar_excepciones(excepciones, a.hoy)

@@ -245,3 +245,4 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 | R-10 | El código propio supera el límite de líneas del plan Free de SonarQube Cloud | Baja | Medio | Alerta al 80 % en `export-metrics.sh` (RN-29.6) | Líder técnico |
 | R-11 | onnxruntime sin *wheels* para Python 3.15 (spike de F0) | Alta | Alto | Contingencia 3.14 por plataforma (ADR-0002) o *embedder* alternativo; vence con la primera versión `cp315` | Ingeniero LLMOps |
 | R-12 | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Alta | Alto | Decisión del Product Owner antes de F3 (ver ADR-0002) | Product Owner |
+| R-13 | Jan v0.8.8 trae ~100 CVE altas o críticas en dependencias de terceros (yarn.lock y Cargo.lock), varias de runtime (dompurify, seroval, zip) | Alta | Alto | Reporte en cada CI; excepción EX-003 hasta el 2026-12-31; remediación en F1 con *resolutions*, `cargo update` o un Jan más reciente | Oficial de seguridad |

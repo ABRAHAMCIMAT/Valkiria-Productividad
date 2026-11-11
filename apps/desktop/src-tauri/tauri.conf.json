@@ -1,9 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Jan",
-  "mainBinaryName": "Jan-Desktop",
-  "version": "0.8.5",
-  "identifier": "jan.ai.app",
+  "productName": "Valkiria Productividad",
+  "mainBinaryName": "Valkiria-Productividad",
+  "version": "0.0.1",
+  "identifier": "com.valtre.valkiria",
   "build": {
     "frontendDist": "../web-app/dist",
     "devUrl": "http://localhost:1420",
@@ -30,14 +30,18 @@
         "media-src": "'self' asset: http://asset.localhost blob: data: https:",
         "frame-src": "'self' preview: http://preview.localhost",
         "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
-        "script-src": "'self' 'unsafe-eval' asset: $APPDATA/**.* http://asset.localhost https://eu-assets.i.posthog.com https://posthog.com"
+        "script-src": "'self' 'unsafe-eval' asset: $APPDATA/**.* http://asset.localhost"
       },
-      "dangerousDisableAssetCspModification": ["style-src"],
+      "dangerousDisableAssetCspModification": [
+        "style-src"
+      ],
       "assetProtocol": {
         "enable": true,
         "scope": {
           "requireLiteralLeadingDot": false,
-          "allow": ["**/*"]
+          "allow": [
+            "**/*"
+          ]
         }
       }
     }
@@ -51,18 +55,15 @@
       "resolve": true
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJFNDEzMEVCMUEzNUFENDQKUldSRXJUVWE2ekJCTGc1Mm1BVXgrWmtES3huUlBFR0lCdG5qbWFvMzgyNDhGN3VTTko5Q1NtTW0K",
-      "endpoints": [
-        "https://apps.jan.ai/update-check",
-        "https://github.com/janhq/jan/releases/latest/download/latest.json"
-      ],
+      "pubkey": "",
+      "endpoints": [],
       "windows": {
         "installMode": "passive"
       }
     }
   },
   "bundle": {
-    "publisher": "Menlo Research Pte. Ltd.",
+    "publisher": "VALTRE",
     "active": true,
     "createUpdaterArtifacts": false,
     "icon": [
@@ -72,6 +73,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["resources/LICENSE"]
+    "resources": [
+      "resources/LICENSE"
+    ],
+    "copyright": "© VALTRE. Basado en Jan (Apache 2.0)."
   }
 }

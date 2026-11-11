@@ -114,14 +114,12 @@ export default defineConfig(({ mode }) => {
       POSTHOG_KEY: JSON.stringify(env.POSTHOG_KEY),
       POSTHOG_HOST: JSON.stringify(env.POSTHOG_HOST),
       GA_MEASUREMENT_ID: JSON.stringify(env.GA_MEASUREMENT_ID),
-      MODEL_CATALOG_URL: JSON.stringify(
-        'https://raw.githubusercontent.com/janhq/model-catalog/main/model_catalog_v2.json'
-      ),
-      LATEST_JAN_MODEL_URL: JSON.stringify(
-        'https://raw.githubusercontent.com/janhq/model-catalog/main/latest_jan_model.json'
-      ),
+      // Valkiria: sin catálogo remoto de Jan; el verificado llega en F1 (HU-05).
+      MODEL_CATALOG_URL: JSON.stringify(env.VALKIRIA_MODEL_CATALOG_URL ?? ''),
+      LATEST_JAN_MODEL_URL: JSON.stringify(env.VALKIRIA_LATEST_MODEL_URL ?? ''),
+      // Valkiria: el updater de Jan queda desactivado; el propio llega en F10 (HU-26).
       AUTO_UPDATER_DISABLED: JSON.stringify(
-        env.AUTO_UPDATER_DISABLED === 'true'
+        env.AUTO_UPDATER_DISABLED !== 'false'
       ),
       UPDATE_CHECK_INTERVAL_MS: JSON.stringify(
         Number(env.UPDATE_CHECK_INTERVAL_MS) || 60 * 60 * 1000

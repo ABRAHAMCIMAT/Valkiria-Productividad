@@ -191,6 +191,10 @@ function General() {
                   </span>
                 }
               />
+              <CardItem
+                title={t('settings:general.aboutTitle')}
+                description={t('settings:general.aboutAttribution')}
+              />
               {!AUTO_UPDATER_DISABLED && (
                 <>
                   <CardItem

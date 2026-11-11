@@ -27,3 +27,12 @@ motivo = "Dependencia de MLflow. El paquete no declara licencia en sus metadatos
 responsable = "Oficial de seguridad"
 riesgo = "R-07"
 vence = 2027-05-10
+
+[[excepcion]]
+id = "EX-003"
+tipo = "cve"
+objetivo = "apps/desktop"
+motivo = "Dependencias de terceros del fork de Jan v0.8.8 (última versión de upstream): ~100 CVE altas o críticas en yarn.lock y Cargo.lock, muchas solo de desarrollo. Se reportan en cada CI (trivy-desktop.json). Remediación en F1: actualizar con resolutions/cargo update o sincronizar con un Jan más reciente, priorizando las de runtime (dompurify, seroval, zip, quinn-proto, form-data). El código propio de Valkiria no tiene excepción."
+responsable = "Oficial de seguridad"
+riesgo = "R-13"
+vence = 2026-12-31

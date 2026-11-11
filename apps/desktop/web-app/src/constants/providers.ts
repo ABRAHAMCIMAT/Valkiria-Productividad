@@ -53,7 +53,7 @@ export const openAIProviderSettings = [
 ]
 export const predefinedProviders = [
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.openai.com/v1',
     explore_models_url: 'https://platform.openai.com/docs/models',
@@ -76,7 +76,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://YOUR-RESOURCE-NAME.openai.azure.com/openai/v1',
     explore_models_url: 'https://oai.azure.com/deployments',
@@ -110,7 +110,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.anthropic.com/v1',
     provider: 'anthropic',
@@ -145,7 +145,7 @@ export const predefinedProviders = [
     ]
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://openrouter.ai/api/v1',
     explore_models_url: 'https://openrouter.ai/models',
@@ -183,7 +183,7 @@ export const predefinedProviders = [
     ],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.mistral.ai/v1',
     explore_models_url:
@@ -207,7 +207,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.groq.com/openai/v1',
     explore_models_url: 'https://console.groq.com/docs/models',
@@ -230,7 +230,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.x.ai/v1',
     explore_models_url: 'https://docs.x.ai/overview',
@@ -253,7 +253,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://generativelanguage.googleapis.com/v1beta/openai',
     explore_models_url: 'https://ai.google.dev/gemini-api/docs/models/gemini',
@@ -276,7 +276,7 @@ export const predefinedProviders = [
     models: [],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://api.minimax.io/v1',
     explore_models_url: 'https://platform.minimax.io/docs/api-reference/text-openai-api',
@@ -328,7 +328,7 @@ export const predefinedProviders = [
     ],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://router.huggingface.co/v1',
     explore_models_url:
@@ -377,7 +377,7 @@ export const predefinedProviders = [
     ],
   },
   {
-    active: true,
+    active: false,
     api_key: '',
     base_url: 'https://integrate.api.nvidia.com/v1',
     explore_models_url: 'https://build.nvidia.com/models',

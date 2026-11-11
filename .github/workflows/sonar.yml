@@ -74,7 +74,7 @@ jobs:
           mkdir -p reports
           uv sync --frozen --all-groups
           uv run pytest --cov=src --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml || true
-          uv run pytest ../tools/tests -o addopts="" -p no:cacheprovider --cov=../tools/security --cov-report=xml:reports/coverage-tools.xml || true
+          uv run pytest ../tools/tests -o addopts="" -p no:cacheprovider --cov=../tools --cov-branch --cov-report=xml:reports/coverage-tools.xml || true
           uv run ruff check --output-format=json --output-file=reports/ruff.json . || true
           uv run bandit -r src ../tools -x ../tools/tests -f json -o reports/bandit.json || true
           uv run mypy src > reports/mypy.txt || true
