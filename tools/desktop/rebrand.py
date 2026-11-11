@@ -190,6 +190,19 @@ PARCHES = [
         f"<key>CFBundleURLName</key>\n      <string>{IDENTIFICADOR}</string>",
         "nombre del esquema de URL de macOS",
     ),
+    Parche(
+        "extensions/llamacpp-extension/src/index.ts",
+        """  private async bootstrapDefaultEmbedder(): Promise<void> {
+    try {
+      if (await getBackendSetting(EMBEDDER_BOOTSTRAP_KEY)) return""",
+        """  private async bootstrapDefaultEmbedder(): Promise<void> {
+    try {
+      // Valkiria: Jan descargaba el embedder de Hugging Face (vía apps.jan.ai) en el primer
+      // arranque sin consentimiento, aunque su comentario dice lo contrario (RN-01.3).
+      if (!(await this.hasSetupConsent())) return
+      if (await getBackendSetting(EMBEDDER_BOOTSTRAP_KEY)) return""",
+        "descarga del embedder solo con consentimiento",
+    ),
 ]
 
 _JAN = re.compile(r"\bJan\b")

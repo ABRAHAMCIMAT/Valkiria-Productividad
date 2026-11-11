@@ -30,6 +30,10 @@ Todas las aplica `tools/desktop/rebrand.py`; no hay otros cambios manuales en es
 | Proveedores remotos | Todos los proveedores predefinidos (OpenAI, Anthropic, Gemini, etc.) quedan `active: false` | RN-01.3 |
 | Actualizaciones | Updater de Jan desactivado por defecto (`AUTO_UPDATER_DISABLED`), sin endpoints ni clave pública de Jan. El updater de Valkiria llega en F10 (HU-26) | RN-01.3 |
 | Catálogo de modelos | Sin descarga del catálogo ni del «modelo recomendado» de Jan desde GitHub; solo se consultan si se define `VALKIRIA_MODEL_CATALOG_URL` / `VALKIRIA_LATEST_MODEL_URL`. El catálogo verificado llega en F1 (HU-05) | RN-01.3 |
+| Notas de versión | Jan consultaba `api.github.com/repos/janhq/jan/releases` en cada arranque; ahora solo con el updater activo | RN-01.3 |
+| Embedder de RAG | Jan descargaba `all-MiniLM-L6-v2` de Hugging Face (vía `apps.jan.ai`) en el primer arranque sin consentimiento; ahora solo tras aceptar la configuración inicial | RN-01.3 |
+| WebView2 (Windows) | Arranca sin red de fondo, actualización de componentes, SmartScreen ni pings hacia Microsoft (`additionalBrowserArgs`) | RN-01.3 |
+| `Info.plist` (macOS) | `CFBundleIdentifier` y `CFBundleURLName` pasan a `com.valtre.valkiria`; el `Info.plist` propio de Jan sobrescribía el `identifier` de Tauri. El esquema `jan://` se conserva porque lo usan internamente los callbacks | RN-01.4 |
 | Analítica | PostHog fuera de la CSP. Además, la analítica de Jan solo se inicia si el build define `POSTHOG_KEY`, y Valkiria no la define | RN-01.3 |
 
 ## Limitaciones conocidas en F0
