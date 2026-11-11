@@ -63,7 +63,6 @@
 | — | Motor de inferencia como *stub* en el build de F0 | Líder técnico | F1 | ADR-0001 |
 | — | onnxruntime sin *wheels* para Python 3.15 | Ingeniero LLMOps | Antes de F3 | R-11, ADR-0002 |
 | — | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Product Owner | Antes de F3 | R-12, ADR-0002 |
-| — | Commits sin firma (T-30 pendiente) | Cada desarrollador | Inicio de F1 | RN-02.3 |
 
 ## 5. Aprobaciones (las registra GitHub en el PR de cierre)
 - [ ] Líder técnico
@@ -88,6 +87,21 @@
 **Acciones para F1**
 1. Remediar las CVE de runtime del fork (EX-003) y compilar el motor real de inferencia.
 2. Decidir el soporte de macOS Intel (R-12) y la contingencia de onnxruntime (R-11).
-3. Configurar la firma de commits (y entonces exigirla en el *ruleset*) y completar el análisis local de Sonar (CA-29.4).
+3. Completar el análisis local de Sonar (CA-29.4).
 4. Recibir el ícono oficial de VALTRE (R-09).
 5. Ahora que el repo es público: publicar los resultados de OpenSSF Scorecard (`publish_results: true`).
+
+## 7. Anexo posterior al cierre (2026-11-11)
+
+**T-30 · Firma de commits: cerrada.** Con esto se cumple por completo RN-02.3 (PR, revisión, CI en verde y commits firmados).
+
+| Elemento | Estado |
+|---|---|
+| Firma | SSH con llave ED25519 dedicada (`SHA256:Ciha5HmkNCNSmfmzYabPXoflut2PLb+BveHRd1YZSFU`), registrada como *Signing Key* en `ABRAHAMCIMAT` |
+| Configuración de git | `gpg.format=ssh`, `commit.gpgsign=true`, `tag.gpgsign=true`; identidad del repositorio `ABRAHAMCIMAT <abrahamcimat@me.com>` |
+| Verificación en GitHub | Commit de prueba `3cbc1ed`: *Verified* (`valid`) |
+| *Ruleset* `main` | Regla `required_signatures` activa, junto con PR obligatorio, 7 checks requeridos y bloqueo de *force push* y borrado |
+
+**Hallazgo:** la llave se registró en `ABRAHAMCIMAT`, pero los commits usaban `carlos.carballo@tec.mx`, que GitHub asocia a otra cuenta (`abrahamtec`); por eso salían *Unverified (unknown_key)*. Se resolvió fijando en este repositorio el correo de la cuenta dueña.
+
+Los commits anteriores a este anexo, incluido el tag `fase-0-cierre`, quedan sin firma; la regla aplica a los cambios nuevos. Este anexo modifica `cierre.md`, por lo que `manifest.sha256` se regeneró; `manifest-ci.sha256` conserva el manifiesto original de CI.
