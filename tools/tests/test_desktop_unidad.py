@@ -295,3 +295,11 @@ def test_contiene_con_unidades_distintas(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(smoke.os.path, "commonpath", distinta_unidad)
     assert smoke.contiene("C:\\a", "D:\\b") is False
     assert rebrand.contiene("C:\\a", "D:\\b") is False
+
+
+def test_sin_posthog_quita_solo_posthog() -> None:
+    fuentes = (
+        "'self' https://us.i.posthog.com https://posthog.com/x https://notposthog.com 'unsafe-eval'"
+    )
+    assert rebrand.sin_posthog(fuentes) == "'self' https://notposthog.com 'unsafe-eval'"
+    assert rebrand.sin_posthog("'self'") == "'self'"

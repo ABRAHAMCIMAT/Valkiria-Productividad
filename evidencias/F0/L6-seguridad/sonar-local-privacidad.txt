@@ -1,0 +1,9 @@
+# CA-29.4 · Privacidad del SonarQube local (2026-11-11T15:38Z, commit 4ad1634)
+## docker port valkiria-sonar-sonarqube-1
+9000/tcp -> 127.0.0.1:9000
+## docker port valkiria-sonar-db-1 (vacío = sin puertos publicados)
+## lsof TCP:9000 LISTEN
+com.docke 127.0.0.1:9000 (LISTEN)
+## Prueba desde la IP de red (192.168.x)
+http_code=000
+## Análisis: tools/sonar/scan-local.sh -> QUALITY GATE STATUS: PASSED (ver L4-desarrollo/sonar-local-metrics.json)

@@ -19,7 +19,7 @@ modifica, para que nunca quede una marca a medias.
 
 ## Desviaciones respecto a Jan
 
-Todas las aplica `tools/desktop/rebrand.py`; no hay otros cambios manuales en este directorio.
+Las de marca y privacidad las aplica `tools/desktop/rebrand.py`. Los únicos cambios manuales son los de dependencias de la sección siguiente.
 
 | Área | Cambio | Regla |
 |---|---|---|
@@ -36,14 +36,30 @@ Todas las aplica `tools/desktop/rebrand.py`; no hay otros cambios manuales en es
 | `Info.plist` (macOS) | `CFBundleIdentifier` y `CFBundleURLName` pasan a `com.valtre.valkiria`; el `Info.plist` propio de Jan sobrescribía el `identifier` de Tauri. El esquema `jan://` se conserva porque lo usan internamente los callbacks | RN-01.4 |
 | Analítica | PostHog fuera de la CSP. Además, la analítica de Jan solo se inicia si el build define `POSTHOG_KEY`, y Valkiria no la define | RN-01.3 |
 
+## Dependencias (remediación de EX-003, 2026-11-11)
+
+Cambios manuales para reducir los hallazgos de terceros de 100 a 6 (4 CVE distintas). Al sincronizar un tag nuevo de Jan
+hay que conservarlos o comprobar que upstream ya los resolvió (`trivy fs apps/desktop`).
+
+| Archivo | Cambio | Motivo |
+|---|---|---|
+| `package.json` | `resolutions` por descriptor hacia la versión corregida **de la misma versión mayor**: brace-expansion, dompurify, flatted, glob, ip-address, js-yaml, lodash-es, minimatch, nanoid, picomatch, postcss, preact, rollup, seroval, source-map-js, tar 7, vite 7 | CVE altas o críticas con corrección compatible por semver |
+| `core/package.json` | Fuera `@npmcli/arborist`, `pacote`, `request`, `request-progress` y `happy-dom`: son `devDependencies` que ningún archivo usa (las pruebas corren con `jsdom`) | Traían tar 6, pacote 18, sigstore 2, form-data 2.3 y happy-dom 20 |
+| `*/package.json` | `vitest`, `@vitest/ui` y `@vitest/coverage-v8` de 2.1.9 / 3.2.4 a 3.2.6 en todos los workspaces | CVE-2026-47429; además desaparecen vite 5 y vite-node 2 |
+| `src-tauri/utils/Cargo.lock`, `src-tauri/plugins/tauri-plugin-llamacpp/Cargo.lock` | `quinn-proto` 0.11.14 → 0.11.15 (mismas dependencias; el `Cargo.lock` principal ya usaba 0.11.16) | GHSA-4w2j-m93h-cj5j |
+
+Verificado en Node 20 y yarn 4.5.3: `yarn install --immutable`, `build:core`, `build:extensions`,
+`build:web` y las 171 pruebas de `@janhq/core` pasan.
+
 ## Limitaciones conocidas en F0
 
 - **Motor de inferencia:** el build de CI usa los *stubs* de Jan (`scripts/stub-tauri-resources.mjs`)
   para llama.cpp y MLX. La app abre y muestra la marca, pero no ejecuta modelos locales; el motor real
   se compila desde F1 (HU-04, HU-05).
-- **Dependencias de terceros:** Jan v0.8.8 trae ~100 CVE altas o críticas en `yarn.lock` y `Cargo.lock`.
-  Se reportan en cada CI y están cubiertas por la excepción **EX-003** (vence el 2026-12-31, riesgo R-13);
-  la remediación es parte de F1.
-- **Pruebas de Jan:** algunas pruebas unitarias de upstream comprueban textos «Jan» o proveedores activos
-  y fallan con la marca aplicada. No forman parte del CI de Valkiria.
+- **Dependencias de terceros:** quedan 6 hallazgos altos o críticos (de 100; 4 CVE distintas): `zip` en Rust, que exige subir
+  tauri, tauri-plugin-updater y calamine, y `tinypool`, solo de pruebas. Se reportan en cada CI y están
+  cubiertas por la excepción **EX-003** acotada (vence el 2026-12-31, riesgo R-13); el resto es parte de F1.
+- **Pruebas de Jan:** 13 de las 4294 pruebas de `web-app` fallan con la marca aplicada porque comprueban
+  el comportamiento original de Jan (etiqueta «Jan», consulta de releases a GitHub, asistente por defecto).
+  No forman parte del CI de Valkiria; se adaptan en F1.
 - **Sin firma:** los instaladores de CI no están firmados ni notarizados (F10, HU-26).

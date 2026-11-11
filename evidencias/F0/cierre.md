@@ -15,12 +15,12 @@
 | HU-01 | Aplicación con marca Valkiria | Hecha | 3 / 3 | #8 |
 | HU-02 | Pipeline de integración seguro | Hecha | 3 / 3 | #6, #9 (demo) |
 | HU-03 | Registro de experimentos y trazas | Hecha | 3 / 3 | #7 |
-| HU-29 | Tablero de calidad del código | Hecha (CA-29.4 parcial) | 5 / 5 | #4, #5 (demo), #10 (demo), #11 |
+| HU-29 | Tablero de calidad del código | Hecha | 5 / 5 | #4, #5 (demo), #10 (demo), #11 |
 
 **Notas por criterio:**
 - **CA-02.1 y CA-29.1:** los PRs de demostración #9 y #10 quedaron con su check en rojo. Desde el 2026-11-11 el repositorio es **público** (decisión D1) y el *ruleset* `main` exige PR, prohíbe *force push* y borrado, y requiere los checks Core (3 SO), Seguridad, Evidencia MLflow, SonarQube Cloud y SonarCloud Code Analysis: un PR así ya no se puede fusionar.
 - **CA-29.2:** el histórico se completa con los tres análisis de `main` que generan las fusiones de este cierre.
-- **CA-29.4:** verificada la privacidad (solo `127.0.0.1:9000`). Falta el análisis local completo, que requiere que el responsable cree `SONAR_LOCAL_TOKEN`.
+- **CA-29.4:** verificada la privacidad (solo `127.0.0.1:9000`). El análisis local completo se ejecutó después del cierre con Quality Gate en verde (anexo §8).
 
 ## 2. Checklist de evidencias LLMOps
 
@@ -59,7 +59,7 @@
 |---|---|---|---|---|
 | EX-001 | huey: licencia MIT sin declarar en sus metadatos | Oficial de seguridad | 2027-05-10 | R-07 |
 | EX-002 | skops: licencia MIT sin declarar en sus metadatos | Oficial de seguridad | 2027-05-10 | R-07 |
-| EX-003 | ~100 CVE altas o críticas en dependencias de terceros de Jan v0.8.8 | Oficial de seguridad | 2026-12-31 | R-13 |
+| EX-003 | Dependencias de terceros de Jan v0.8.8. Acotada después del cierre de 100 a 6 hallazgos (4 CVE): `zip` en Rust y `tinypool`, solo de pruebas (anexo §8) | Oficial de seguridad | 2026-12-31 | R-13 |
 | — | Motor de inferencia como *stub* en el build de F0 | Líder técnico | F1 | ADR-0001 |
 | — | onnxruntime sin *wheels* para Python 3.15 | Ingeniero LLMOps | Antes de F3 | R-11, ADR-0002 |
 | — | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | Product Owner | Antes de F3 | R-12, ADR-0002 |
@@ -85,14 +85,13 @@
 **Qué mejorar**
 - GitHub retiró `macos-13` y `macos-14`: hay que validar las etiquetas de runner al inicio de cada fase.
 - Con el repositorio privado en plan Free se agotaron los minutos de Actions (macOS cuenta ×10) y no había protección de ramas. Se resolvió haciéndolo público (D1).
-- Faltan la firma de commits y los tokens del SonarQube local.
+- Faltaban la firma de commits y el análisis del SonarQube local; ambos se resolvieron después del cierre (anexos §7 y §8).
 
 **Acciones para F1**
-1. Remediar las CVE de runtime del fork (EX-003) y compilar el motor real de inferencia.
+1. Cerrar EX-003 antes del 2026-12-31: subir `zip` a 9 junto con tauri 2.12+, tauri-plugin-updater 2.14.1 y calamine 0.37, y sacar tinypool 1 (vitest 4). Compilar el motor real de inferencia.
 2. Decidir el soporte de macOS Intel (R-12) y la contingencia de onnxruntime (R-11).
-3. Completar el análisis local de Sonar (CA-29.4).
-4. Recibir el ícono oficial de VALTRE (R-09).
-5. Ahora que el repo es público: publicar los resultados de OpenSSF Scorecard (`publish_results: true`).
+3. Recibir el ícono oficial de VALTRE (R-09).
+4. Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.
 
 ## 7. Anexo posterior al cierre (2026-11-11)
 
@@ -108,3 +107,14 @@
 **Hallazgo:** la llave se registró en `ABRAHAMCIMAT`, pero los commits usaban `carlos.carballo@tec.mx`, que GitHub asocia a otra cuenta (`abrahamtec`); por eso salían *Unverified (unknown_key)*. Se resolvió fijando en este repositorio el correo de la cuenta dueña.
 
 Los commits anteriores a este anexo, incluido el tag `fase-0-cierre`, quedan sin firma; la regla aplica a los cambios nuevos. Este anexo modifica `cierre.md`, por lo que `manifest.sha256` se regeneró; `manifest-ci.sha256` conserva el manifiesto original de CI.
+
+## 8. Anexo: pendientes resueltos después del cierre (2026-11-11)
+
+| Pendiente | Resultado | Evidencia |
+|---|---|---|
+| **CA-29.4** · Análisis local de Sonar | `tools/sonar/scan-local.sh` ahora genera los mismos reportes que CI (pruebas, cobertura, ruff, bandit y mypy). Quality Gate **PASSED**: cobertura 96.5 %, 0 bugs, 0 vulnerabilidades, 0 *code smells*, 0 *hotspots*, 1246 líneas. El servicio solo escucha en `127.0.0.1:9000`, la base de datos no publica puertos y la IP de red no responde | `L4-desarrollo/sonar-local-metrics.json`, `L6-seguridad/sonar-local-privacidad.txt` |
+| Hallazgo del análisis local | `python:S8786` (expresión regular superlineal) en `tools/desktop/rebrand.py`: se reemplazó por un filtro de *tokens* con prueba unitaria | commit `4ad1634` |
+| **EX-003** · CVE del fork de Jan | De **100 a 6** hallazgos altos o críticos (4 CVE distintas). Se usaron `resolutions` de yarn dentro de la misma versión mayor, se quitaron cinco `devDependencies` de `@janhq/core` sin uso y se subieron vitest a 3.2.6 y `quinn-proto` a 0.11.15. Verificado con `yarn install --immutable`, `build:core`, `build:extensions`, `build:web` y las 171 pruebas de `@janhq/core`. La excepción sigue vigente solo para `zip` (Rust) y `tinypool` (pruebas) | `L6-seguridad/trivy-desktop-remediacion.json`, `apps/desktop/VALKIRIA.md` |
+| OpenSSF Scorecard | `publish_results: true`: el repositorio es público y los resultados se publican firmados por OIDC | `.github/workflows/scorecard.yml` |
+
+Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo registra el estado posterior. `trazabilidad.csv` actualiza la fila del análisis local de CA-29.4, y `manifest.sha256` se regeneró.

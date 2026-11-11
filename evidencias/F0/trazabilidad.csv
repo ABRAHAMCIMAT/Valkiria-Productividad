@@ -43,5 +43,5 @@ HU-29,RN-29.2;RN-29.3,CA-29.1,"PR con inyección de comandos, MD5 y credencial: 
 HU-29,,CA-29.2,job:SonarQube Cloud,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
 HU-29,RN-29.5;RN-29.6,CA-29.3,job:SonarQube Cloud,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
 HU-29,RN-29.4,CA-29.4,"SonarQube local publica solo 127.0.0.1:9000, la base de datos no expone puertos y no responde en la IP de red (verificado 2026-11-10)",pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
-HU-29,RN-29.4,CA-29.4,Análisis local con tools/sonar/scan-local.sh,pendiente: requiere SONAR_LOCAL_TOKEN del responsable,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-29,RN-29.4,CA-29.4,"Análisis local con tools/sonar/scan-local.sh: Quality Gate PASSED, cobertura 96.5 %, 0 hallazgos (L4-desarrollo/sonar-local-metrics.json, L6-seguridad/sonar-local-privacidad.txt, 2026-11-11)",pass,,4ad163409dcbdb159f9f01183307b75338fbbf99,,F0,EV-F0-L6
 HU-29,RN-29.1,CA-29.5,test_sonar_excluye_el_fork_de_jan,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
