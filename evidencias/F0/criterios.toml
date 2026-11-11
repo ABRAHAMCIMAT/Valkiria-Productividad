@@ -45,6 +45,11 @@ reglas = ["RN-02.1", "RN-02.3"]
 evidencia = "EV-F0-L6"
 jobs = ["Seguridad"]
 
+[[criterio.demostraciones]]
+descripcion = "PR con token falso de GitHub: Seguridad falla por Gitleaks (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955015724)"
+resultado = "pass: check en rojo; la fusión aún no se bloquea (R-08)"
+pr = "#9"
+
 [[criterio]]
 id = "CA-02.2"
 hu = "HU-02"
@@ -105,6 +110,11 @@ hu = "HU-29"
 reglas = ["RN-29.2", "RN-29.3"]
 evidencia = "EV-F0-L6"
 jobs = ["SonarQube Cloud"]
+
+[[criterio.demostraciones]]
+descripcion = "PR con inyección de comandos, MD5 y credencial: Quality Gate FAILED (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955023275); Seguridad falla por Bandit, Semgrep y Gitleaks"
+resultado = "pass: check en rojo; la fusión aún no se bloquea (R-08)"
+pr = "#10"
 
 [[criterio]]
 id = "CA-29.2"
