@@ -81,8 +81,10 @@ jobs:
           yarn copy:assets:tauri
           yarn download:bin
           node scripts/stub-tauri-resources.mjs
+      # Solo el .app: el .dmg (bundle_dmg.sh) falla en los runners de GitHub. CI valida el .app y lo
+      # empaqueta como zip; el .dmg firmado y notarizado llega con la distribución (F10, HU-26).
       - name: Compilar la app (aarch64-apple-darwin, sin firma)
-        run: yarn tauri build --target aarch64-apple-darwin
+        run: yarn tauri build --target aarch64-apple-darwin --bundles app
       - name: Verificar arquitectura y macOS mínimo (sin abrir la app)
         working-directory: apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/macos
         run: |
@@ -99,9 +101,8 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: valkiria-macos-arm64
-          path: |
-            ${{ runner.temp }}/Valkiria-Productividad-macos.zip
-            apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          path: ${{ runner.temp }}/Valkiria-Productividad-macos.zip
+          if-no-files-found: error
           retention-days: 30
 
   windows:
