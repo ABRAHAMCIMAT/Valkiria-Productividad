@@ -240,7 +240,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 | R-05 | RAM insuficiente en el perfil Estándar | Media | Medio | Política de un solo modelo grande; KV en q8; contexto de 8 K | Ingeniero LLMOps |
 | R-06 | Juez LLM local poco fiable | Alta | Medio | Calibración humana (kappa ≥ 0.7) y métricas deterministas como base | Ingeniero LLMOps |
 | R-07 | Licencias de modelos que cambian | Baja | Alto | Revisión del catálogo en cada cierre; solo Apache 2.0 o MIT por defecto | Oficial de seguridad |
-| R-08 | Repositorio privado en plan Free: sin reglas de protección de ramas y minutos de macOS multiplicados ×10 | Alta | Alto | Decisión D1 (repo público o GitHub Pro); mientras tanto, regla de equipo de no fusionar con checks en rojo y la matriz de escritorio solo en `main`, de noche o con la etiqueta `build-desktop` | Líder técnico |
+| R-08 | Repositorio privado en plan Free: sin reglas de protección de ramas y minutos de macOS multiplicados ×10 | — | — | **Cerrado el 2026-11-11:** los minutos se agotaron durante F0 y el repositorio se hizo público (D1). *Ruleset* `main` con PR obligatorio y checks requeridos | Líder técnico |
 | R-09 | Faltan los recursos de marca oficiales de VALTRE (ícono y textos) | Media | Bajo | Ícono provisional generado en el repo; se reemplaza sin cambiar código | Product Owner |
 | R-10 | El código propio supera el límite de líneas del plan Free de SonarQube Cloud | Baja | Medio | Alerta al 80 % en `export-metrics.sh` (RN-29.6) | Líder técnico |
 | R-11 | onnxruntime sin *wheels* para Python 3.15 (spike de F0) | Alta | Alto | Contingencia 3.14 por plataforma (ADR-0002) o *embedder* alternativo; vence con la primera versión `cp315` | Ingeniero LLMOps |

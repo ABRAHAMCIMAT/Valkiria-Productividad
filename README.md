@@ -33,4 +33,4 @@ La interfaz de escritorio deriva de [Jan](https://github.com/janhq/jan), de Menl
 
 ## Estado
 
-En planeación. Siguiente paso: **F0 · Fundaciones y gobierno**.
+**F0 · Fundaciones y gobierno** en cierre ([acta](evidencias/F0/cierre.md)). Siguiente: **F1 · Inferencia y modelos**.

@@ -47,7 +47,7 @@ jobs = ["Seguridad"]
 
 [[criterio.demostraciones]]
 descripcion = "PR con token falso de GitHub: Seguridad falla por Gitleaks (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955015724)"
-resultado = "pass: check en rojo; la fusión aún no se bloquea (R-08)"
+resultado = "pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión"
 pr = "#9"
 
 [[criterio]]
@@ -113,7 +113,7 @@ jobs = ["SonarQube Cloud"]
 
 [[criterio.demostraciones]]
 descripcion = "PR con inyección de comandos, MD5 y credencial: Quality Gate FAILED (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955023275); Seguridad falla por Bandit, Semgrep y Gitleaks"
-resultado = "pass: check en rojo; la fusión aún no se bloquea (R-08)"
+resultado = "pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión"
 pr = "#10"
 
 [[criterio]]
