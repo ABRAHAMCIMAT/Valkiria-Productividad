@@ -15,6 +15,9 @@ def test_rn_03_3_servidor_solo_en_loopback(tmp_path: Path) -> None:
     for host in ("0.0.0.0", "192.168.1.10", "localhost.evil", ""):  # noqa: S104
         with pytest.raises(ValueError, match="loopback"):
             cli.comando_servidor(host, 5000, tmp_path)
+    for puerto in (80, 70000):
+        with pytest.raises(ValueError, match="rango"):
+            cli.comando_servidor("127.0.0.1", puerto, tmp_path)
 
 
 def test_serve_dry_run(

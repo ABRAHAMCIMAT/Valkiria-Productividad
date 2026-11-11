@@ -22,6 +22,8 @@ export const useReleaseNotes = create<ReleaseState>((set) => ({
   error: null,
 
   fetchLatestRelease: async (includeBeta: boolean) => {
+    // Valkiria: sin updater de Jan no se consultan sus releases en GitHub al arrancar (RN-01.3).
+    if (AUTO_UPDATER_DISABLED) return
     set({ loading: true, error: null })
     try {
       const res = await fetch(

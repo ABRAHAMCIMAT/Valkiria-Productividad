@@ -189,7 +189,7 @@ def test_ca_01_3_macos_conexion_externa_falla(
     macos_simulado["conexiones"] = ["140.82.112.3:443"]
     r = smoke.ejecutar(macos_simulado["app"], 10, tmp_path)
     assert not r.ok
-    assert r.conexiones_externas == ["140.82.112.3:443"]
+    assert r.conexiones_externas == ["140.82.112.3:443 (app)"]
 
 
 def test_ca_01_1_app_que_se_cierra_falla(macos_simulado: dict[str, Any], tmp_path: Path) -> None:
@@ -220,7 +220,9 @@ def test_funciones_windows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
             }
         ),
         "Win32_Process": json.dumps(procesos),
-        "Get-NetTCPConnection": "127.0.0.1:1337\n\n20.1.1.1:443\n",
+        "Get-NetTCPConnection": (
+            "127.0.0.1|1337|valkiria\n\n::1|80|msedgewebview2\n20.1.1.1|443|bun\nmal\n"
+        ),
     }
 
     recibidas: list[dict[str, str]] = []
@@ -234,7 +236,11 @@ def test_funciones_windows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     ident = smoke.identidad_windows(tmp_path / "x.exe")
     assert smoke.validar_identidad(ident, "windows") == []
     assert sorted(smoke.descendientes_windows(10)) == [10, 11, 12]
-    assert smoke.conexiones_windows([10, 11]) == ["127.0.0.1:1337", "20.1.1.1:443"]
+    assert smoke.conexiones_windows([10, 11]) == [
+        ("127.0.0.1:1337", "valkiria"),
+        ("[::1]:80", "msedgewebview2"),
+        ("20.1.1.1:443", "bun"),
+    ]
     smoke.captura_windows(tmp_path / "v.png")
     assert recibidas[0] == {"ruta": str(tmp_path / "x.exe")}
     assert recibidas[-1] == {"destino": str(tmp_path / "v.png")}

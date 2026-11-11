@@ -30,7 +30,8 @@
           ],
           "state": "active"
         },
-        "dragDropEnabled": false
+        "dragDropEnabled": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-background-networking --disable-component-update --disable-domain-reliability --disable-client-side-phishing-detection --no-pings"
       }
     ]
   },

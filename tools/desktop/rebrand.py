@@ -168,6 +168,16 @@ PARCHES = [
     try {""",
         "modelo recomendado remoto opcional",
     ),
+    Parche(
+        "web-app/src/hooks/useReleaseNotes.ts",
+        """  fetchLatestRelease: async (includeBeta: boolean) => {
+    set({ loading: true, error: null })""",
+        """  fetchLatestRelease: async (includeBeta: boolean) => {
+    // Valkiria: sin updater de Jan no se consultan sus releases en GitHub al arrancar (RN-01.3).
+    if (AUTO_UPDATER_DISABLED) return
+    set({ loading: true, error: null })""",
+        "notas de versión de Jan solo con updater activo",
+    ),
 ]
 
 _JAN = re.compile(r"\bJan\b")
@@ -210,10 +220,29 @@ def _tauri(datos: dict[str, object]) -> None:
     csp["script-src"] = re.sub(r"\s*https://\S*posthog\.com", "", csp["script-src"])
 
 
+ARGS_WEBVIEW2 = " ".join(
+    [
+        "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--disable-domain-reliability",
+        "--disable-client-side-phishing-detection",
+        "--no-pings",
+    ]
+)
+
+
 def _titulo_ventana(datos: dict[str, object]) -> None:
     for ventana in datos.get("app", {}).get("windows", []):  # type: ignore[union-attr]
         if ventana.get("title") == "Jan":
             ventana["title"] = NOMBRE
+
+
+def _ventana_windows(datos: dict[str, object]) -> None:
+    """Título y WebView2 sin tráfico de fondo hacia Microsoft (RN-01.3)."""
+    _titulo_ventana(datos)
+    for ventana in datos.get("app", {}).get("windows", []):  # type: ignore[union-attr]
+        ventana["additionalBrowserArgs"] = ARGS_WEBVIEW2
 
 
 def _version_web(datos: dict[str, object]) -> None:
@@ -280,7 +309,7 @@ def aplicar(app: Path = APP, solo_verificar: bool = False) -> list[str]:
     json_edits = [
         ("src-tauri/tauri.conf.json", _tauri),
         ("src-tauri/tauri.macos.conf.json", _titulo_ventana),
-        ("src-tauri/tauri.windows.conf.json", _titulo_ventana),
+        ("src-tauri/tauri.windows.conf.json", _ventana_windows),
         ("src-tauri/tauri.linux.conf.json", _titulo_ventana),
         ("web-app/package.json", _version_web),
     ]
