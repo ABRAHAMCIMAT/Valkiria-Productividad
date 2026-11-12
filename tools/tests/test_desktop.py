@@ -121,3 +121,62 @@ def test_ca_01_1_valida_identidad() -> None:
     assert smoke.validar_identidad(
         {"nombre": "Valkiria Productividad", "fabricante": "Otro"}, "windows"
     )
+
+
+# ---------- CA-01.3 en macOS: registro unificado de Network.framework ----------
+def _evento(pid: int, proceso: str, mensaje: str) -> dict[str, object]:
+    return {"processID": pid, "processImagePath": f"/x/{proceso}", "eventMessage": mensaje}
+
+
+WEBKIT = "com.apple.WebKit.Networking"
+
+
+def test_ca_01_3_registro_atribuye_el_webview_por_pid_de_cliente() -> None:
+    """WebKit abre las conexiones del WebView en otro proceso y anota el pid del cliente."""
+    eventos = [
+        _evento(900, WEBKIT, "[C1 Hostname#fe2e:443 quic, pid: 100, attribution: developer]"),
+        _evento(900, WEBKIT, "[C1.1 Hostname#fe2e:443 in_progress (satisfied, interface: en0)]"),
+        # Conexión de otra app en el mismo proceso de WebKit: no se atribuye.
+        _evento(900, WEBKIT, "[C2 Hostname#aaaa:443 quic, pid: 555]"),
+        _evento(900, WEBKIT, "[C2 Hostname#aaaa:443 in_progress (interface: en0)]"),
+    ]
+    (c,) = smoke.conexiones_registradas(eventos, {100})
+    assert (c.proceso, c.pid, c.conexion, c.interfaces, c.externa) == (
+        WEBKIT,
+        900,
+        "C1",
+        ["en0"],
+        True,
+    )
+
+
+def test_ca_01_3_registro_loopback_no_es_externa() -> None:
+    eventos = [
+        _evento(100, "Valkiria-Productividad", "nw_endpoint_handler_start [C3 IPv4#ec5f:18765]"),
+        _evento(100, "Valkiria-Productividad", "[C3.1 IPv4#ec5f:18765 waiting (interface: lo0)]"),
+    ]
+    (c,) = smoke.conexiones_registradas(eventos, {100})
+    assert c.interfaces == ["lo0"]
+    assert not c.externa
+
+
+def test_ca_01_3_registro_ignora_lineas_sin_conexion_y_no_json() -> None:
+    lineas = [
+        'Filtering the log data using "process == ..."',
+        json.dumps(_evento(100, "Valkiria-Productividad", "Launch Services checkin")),
+        "{no es json",
+        json.dumps({"processID": "x", "eventMessage": "[C1 a:1 (interface: en0)]"}),
+    ]
+    eventos = list(smoke.leer_eventos(lineas))
+    assert len(eventos) == 2
+    assert smoke.conexiones_registradas(eventos, {100}) == []
+
+
+def test_ca_01_3_predicado_valida_el_ejecutable() -> None:
+    predicado = smoke.predicado_red("Valkiria-Productividad")
+    assert 'process == "Valkiria-Productividad"' in predicado
+    assert f'process == "{WEBKIT}"' in predicado
+    # Sin filtro de subsystem: en modo stream descarta los mensajes de WebKit.
+    assert "subsystem" not in predicado
+    with pytest.raises(ValueError, match="inválido"):
+        smoke.predicado_red('x" OR process != "')
