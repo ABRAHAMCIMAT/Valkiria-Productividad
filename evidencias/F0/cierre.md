@@ -61,7 +61,7 @@
 | ~~EX-002~~ | skops: licencia MIT sin declarar en sus metadatos. **Cerrada:** licencia verificada (anexo §9) | Oficial de seguridad | — | R-07 |
 | ~~EX-003~~ | Dependencias de terceros de Jan v0.8.8. **Cerrada:** de 100 a 0 hallazgos (anexos §8 y §9) | Oficial de seguridad | — | R-13 |
 | — | Motor de inferencia como *stub* en el build de F0 | Líder técnico | F1 | ADR-0001 |
-| — | onnxruntime sin *wheels* para Python 3.15 | Ingeniero LLMOps | Antes de F3 | R-11, ADR-0002 |
+| — | onnxruntime sin *wheels* para Python 3.15. **Mitigado:** el *embedder* de F3 usa torch; solo queda el respaldo RapidOCR de F8 (anexo §10) | Ingeniero LLMOps | Inicio de F8 | R-11, ADR-0002 |
 | — | ~~Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime~~ **Cerrado:** sin soporte para Mac Intel (anexo §8) | Product Owner | — | R-12, ADR-0002 |
 
 ## 5. Aprobaciones (las registra GitHub en el PR de cierre)
@@ -89,10 +89,10 @@
 
 **Acciones para F1**
 1. ~~Cerrar EX-003 antes del 2026-12-31.~~ Hecho (anexo §9). Compilar el motor real de inferencia.
-2. Decidir la contingencia de onnxruntime (R-11). R-12 ya está decidido (anexo §8).
-3. Correr `tools/desktop/humo-mac-local.sh --fase F1` en un Mac M4 con macOS 27.2 como evidencia de CA-01.1 y CA-01.3 en macOS.
+2. ~~Decidir la contingencia de onnxruntime (R-11).~~ Mitigado (anexo §10). R-12 ya está decidido (anexo §8).
+3. ~~Correr `tools/desktop/humo-mac-local.sh` en un Mac M4 con macOS 27.2 como evidencia de CA-01.1 y CA-01.3 en macOS.~~ Hecho sobre `main` (anexo §10).
 4. ~~Recibir el ícono oficial de VALTRE (R-09).~~ Hecho (anexo §8).
-5. Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.
+5. ~~Adaptar a la marca las 13 pruebas de `web-app` de Jan que comprueban su comportamiento original.~~ Hecho; la suite corre en CI (anexo §10).
 
 ## 7. Anexo posterior al cierre (2026-11-11)
 
@@ -132,3 +132,15 @@ Con este anexo F0 queda **sin excepciones de seguridad vigentes** (`security/exc
 | **EX-003** (6 hallazgos, 4 CVE) | `zip` 0.6/4.6 → 9.5.1 (solo `deflate`), `calamine` 0.23 → 0.38, `tauri` 2.11 → 2.12.5, `tauri-plugin-updater` 2.10 → 2.14.1 y `tinypool` 1.1.1 → 2.2.0. El parser de hojas de cálculo se adaptó a la API nueva de calamine (fechas de libros con sistema 1904) | `trivy fs apps/desktop`: **0** hallazgos. Rust 1.98: `cargo check --all-targets`, 10 pruebas del plugin RAG y 17 del updater. Node 20: 171 pruebas de `@janhq/core`; extensiones y `web-app` con los mismos resultados que antes | `L6-seguridad/trivy-desktop-ex003-cerrada.json`, `apps/desktop/VALKIRIA.md` |
 
 **Tag de cierre.** `fase-0-cierre` apunta al commit con el que se cerró F0 y no se mueve. Cuando estén las cuatro aprobaciones de la sección 5, el Líder técnico crea el tag firmado `fase-0-cierre-v2` sobre el commit de `main` que las registra (`git tag -s fase-0-cierre-v2 -m "F0 cerrada con anexos §7 a §9 y aprobaciones"` y `git push origin fase-0-cierre-v2`).
+
+## 10. Anexo: pendientes resueltos después del cierre (2026-11-12)
+
+| Pendiente | Resultado | Evidencia |
+|---|---|---|
+| **CA-01.1 y CA-01.3 en macOS** · Prueba de humo en el hardware mínimo | `humo-mac-local.sh --fase F0` sobre el artefacto de `main` (commit `8a5807f`, run 43136052400), ya con el ícono oficial, en un Mac M4 con macOS 27.2. Identidad `com.valtre.valkiria` 0.0.1, la app sigue viva a los 300 s, **0 conexiones externas** y 0 errores | `L4-desarrollo/escritorio/humo-macos-m4/` |
+| **R-11** · onnxruntime sin *wheels* `cp315` | onnxruntime 1.31.1 sigue sin ellos. El *embedder* de F3 pasa a `sentence-transformers` 6.3 sobre torch 2.15 (`cp315`): en Python 3.15 y MPS, `multilingual-e5-small` generó *embeddings* de 384 dimensiones y ordenó bien una consulta de prueba (0.896 contra 0.749). Ya no hace falta la contingencia 3.14 en F3. Queda el respaldo RapidOCR de F8, que se revisa al iniciar esa fase. `spike-deps.yml` vigila la pila cada semana en macOS y Windows | ADR-0002 (revisión 2026-11-12), `docs/06` (R-11) |
+| **Pruebas de Jan con la marca** (13 de `web-app` y 5 de `llamacpp-extension`) | En `web-app`, 3 comprobaban la marca de Jan (`useAssistant`, `threads` y `headerLabel`) y 10 su consulta de releases (`useReleaseNotes`). Esas 10 fallaban porque `vitest.config.ts` define `AUTO_UPDATER_DISABLED` como la cadena `"false"`, que es verdadera. Ahora fijan el *flag* en `false` y dos pruebas nuevas comprueban RN-01.3: con el updater desactivado no se consulta GitHub. En `llamacpp-extension`, las 5 simulaban un primer arranque sin consentimiento; ahora lo simulan y una prueba nueva comprueba que sin él no se descarga el *embedder*. Tres pruebas que pasaban sin probar nada (dos de `headerLabel` y una de reintento del *embedder*) ahora prueban lo que dicen. Con Node 20 y `TZ=UTC`: **4296 de 4296** en `web-app` y **414 de 414** en extensiones. El job «Pruebas de la app (vitest)» de `desktop.yml` corre core, `web-app` y extensiones | `apps/desktop/web-app/src/**/__tests__/`, `extensions/llamacpp-extension/src/test/`, `.github/workflows/desktop.yml` |
+| Paquete de evidencias congelado | Sin cambios a propósito: `criterios.toml`, la sección §3 y la copia de `excepciones.toml` registran el estado del commit verificado `cf0cf48`. Lo vigente está en los anexos §8 a §10, `security/excepciones.toml` (vacío) y `docs/06`. El gate de F1 usará su propio `criterios.toml`, sin jobs de macOS x64 | este anexo |
+| Commits sin firma | Aceptado: la regla `required_signatures` aplica desde el anexo §7. El tag `fase-0-cierre-v2` irá firmado | anexo §7 |
+
+**Lo que queda para cerrar F0:** las cuatro aprobaciones de la sección 5 y el tag firmado `fase-0-cierre-v2`. El motor de inferencia real es alcance de F1 (HU-04), no un pendiente de F0. Este anexo agrega archivos al paquete, así que `manifest.sha256` se regeneró; `manifest-ci.sha256` conserva el manifiesto original de CI.

@@ -7,6 +7,7 @@ HU-01,RN-01.1;RN-01.4,CA-01.1,test_ca_01_1_app_que_se_cierra_falla,pass,,cf0cf48
 HU-01,RN-01.1;RN-01.4,CA-01.1,job:Humo macOS · arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
 HU-01,RN-01.1;RN-01.4,CA-01.1,job:Humo macOS · x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
 HU-01,RN-01.1;RN-01.4,CA-01.1,job:Build y humo Windows x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
+HU-01,RN-01.1;RN-01.4,CA-01.1,"Humo en Mac M4 con macOS 27.2 sobre el artefacto de main (run 43136052400): 300 s, 0 conexiones externas (L4-desarrollo/escritorio/humo-macos-m4/, 2026-11-12)",pass,,8a5807f55bb8f75970382fa89c33c9b059b1337a,,F0,EV-F0-L4
 HU-01,RN-01.2,CA-01.2,test_rn_01_2_atribucion_y_licencia,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4
 HU-01,RN-01.3,CA-01.3,test_rn_01_3_sin_updater_analitica_ni_proveedores_remotos_activos,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
 HU-01,RN-01.3,CA-01.3,test_ca_01_3_clasifica_conexiones,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
@@ -15,6 +16,7 @@ HU-01,RN-01.3,CA-01.3,test_ca_01_3_macos_conexion_externa_falla,pass,,cf0cf48de3
 HU-01,RN-01.3,CA-01.3,job:Humo macOS · arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
 HU-01,RN-01.3,CA-01.3,job:Humo macOS · x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
 HU-01,RN-01.3,CA-01.3,job:Build y humo Windows x64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
+HU-01,RN-01.3,CA-01.3,"Humo en Mac M4 con macOS 27.2 sobre el artefacto de main (run 43136052400): 300 s, 0 conexiones externas (L4-desarrollo/escritorio/humo-macos-m4/, 2026-11-12)",pass,,8a5807f55bb8f75970382fa89c33c9b059b1337a,,F0,EV-F0-L6
 HU-02,RN-02.1;RN-02.3,CA-02.1,job:Seguridad,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L6
 HU-02,RN-02.1;RN-02.3,CA-02.1,PR con token falso de GitHub: Seguridad falla por Gitleaks (https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/42955015724),pass: check en rojo; desde 2026-11-11 el ruleset de main lo exige y bloquea la fusión,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,#9,F0,EV-F0-L6
 HU-02,,CA-02.2,job:Core · macos-arm64,pass,,cf0cf48de32cfa7e2a4846a4bf909cadee542114,,F0,EV-F0-L4

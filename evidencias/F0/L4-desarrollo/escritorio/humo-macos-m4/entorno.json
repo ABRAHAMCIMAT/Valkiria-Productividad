@@ -1,0 +1,21 @@
+{
+  "fecha": "2026-11-12T13:55:31+00:00",
+  "equipo": {
+    "chip": "Apple M4",
+    "modelo": "Mac16,1",
+    "macos": "27.2",
+    "build": "26B123"
+  },
+  "minimo": {
+    "chip": "Apple M4",
+    "macos": "27.2"
+  },
+  "artefacto": {
+    "run_id": "43136052400",
+    "url": "https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/43136052400",
+    "commit": "8a5807f55bb8f75970382fa89c33c9b059b1337a",
+    "zip_sha256": "98e45a09f09aed6072768e188ec03a7581e1b7dac42cf4cd60df7e99626acad4",
+    "arquitecturas": "arm64"
+  },
+  "segundos": 300
+}
