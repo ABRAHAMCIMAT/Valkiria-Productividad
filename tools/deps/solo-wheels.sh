@@ -16,7 +16,8 @@ PY=$1; PLATAFORMA=$2; shift 2
 SDIST_PERMITIDOS=" pyyaml "   # respaldo puro verificado: ver ADR-0002 (revisión 2026-11-12)
 
 python_de() { [[ -x "$1/bin/python" ]] && echo "$1/bin/python" || echo "$1/Scripts/python.exe"; }
-fila() { echo "$1,$PLATAFORMA,$PY,$2,$3,$(printf '%s' "${4:-}" | tr ',\n' '; ' | cut -c1-200)"; }
+# Las comas de los extras (paquete[a,b]) pasan a "+" para no romper el CSV.
+fila() { echo "${1//,/+},$PLATAFORMA,$PY,$2,$3,$(printf '%s' "${4:-}" | tr ',\n' '; ' | cut -c1-200)"; }
 causa() { grep -m1 'hint:' <<<"$1" || grep -m1 -E 'no usable wheels|Wheels are required' <<<"$1" || tail -1 <<<"$1"; }
 
 for paquete in "$@"; do
