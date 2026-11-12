@@ -182,7 +182,12 @@ def macos_simulado(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str,
     monkeypatch.setattr(smoke, "conexion_de_control", lambda: control["pid"])
     monkeypatch.setattr(smoke, "ventana_macos", lambda pids: estado["ventana"])
     monkeypatch.setattr(smoke.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(smoke.subprocess, "Popen", lambda *a, **k: estado["proceso"])
+
+    def popen(*a: Any, **k: Any) -> ProcesoFalso:
+        estado["entorno"] = k.get("env")
+        return estado["proceso"]
+
+    monkeypatch.setattr(smoke.subprocess, "Popen", popen)
     monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
     reloj = iter(range(0, 10_000, 3))
     monkeypatch.setattr(smoke.time, "monotonic", lambda: float(next(reloj)))
@@ -213,6 +218,12 @@ def test_ca_01_3_macos_sin_conexiones_externas(
     assert macos_simulado["proceso"].terminado
     assert (tmp_path / "out" / f"ventana-{r.so}.png").exists()
     assert r.captura == "ventana 77 de la app"
+    # Perfil limpio: la app no abre los datos reales de quien corre la prueba.
+    home = macos_simulado["entorno"]["HOME"]
+    assert home != smoke.os.environ.get("HOME")
+    assert "valkiria-perfil-" in home
+    assert not Path(home).exists()  # se borra al terminar
+    assert "HOME temporal" in r.perfil
     assert r.registro_red["control_loopback_visto"] is True
     (c,) = r.registro_red["conexiones_de_la_app"]  # type: ignore[misc]
     assert c["interfaces"] == ["lo0"]
@@ -486,3 +497,40 @@ def test_registro_red_real_ve_la_conexion_de_control(tmp_path: Path) -> None:
         pid = smoke.conexion_de_control()
     eventos = list(smoke.leer_eventos(archivo.read_text(encoding="utf-8").splitlines()))
     assert any("lo0" in c.interfaces for c in smoke.conexiones_registradas(eventos, {pid}))
+
+
+# ---------------------------------------------------- CA-01.3: proxy de registro (portable)
+def test_proxy_de_registro_anota_y_rechaza_sin_salir_a_internet() -> None:
+    import http.client
+
+    with smoke.proxy_de_registro() as (entorno, intentos):
+        puerto = int(entorno["HTTPS_PROXY"].rsplit(":", 1)[1])
+        assert entorno["https_proxy"] == entorno["HTTPS_PROXY"]
+        assert "127.0.0.1" in entorno["NO_PROXY"]
+        # Lo que hace un cliente HTTPS con proxy: CONNECT al host remoto.
+        c = http.client.HTTPConnection("127.0.0.1", puerto, timeout=10)
+        c.request("CONNECT", "huggingface.co:443")
+        assert c.getresponse().status == 403
+        c.close()
+        for _ in range(50):  # el hilo del proxy anota en paralelo
+            if intentos:
+                break
+            smoke.time.sleep(0.05)
+    assert intentos == ["CONNECT huggingface.co:443 HTTP/1.1"]
+
+
+def test_ca_01_3_intento_por_proxy_hace_fallar(
+    macos_simulado: dict[str, Any], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    @contextlib.contextmanager
+    def proxy_falso() -> Iterator[tuple[dict[str, str], list[str]]]:
+        yield {"HTTPS_PROXY": "http://127.0.0.1:9"}, ["CONNECT apps.jan.ai:443 HTTP/1.1"]
+
+    monkeypatch.setattr(smoke, "proxy_de_registro", proxy_falso)
+    r = smoke.ejecutar(macos_simulado["app"], 10, tmp_path)
+    assert not r.ok
+    assert "proxy: CONNECT apps.jan.ai:443 HTTP/1.1" in r.conexiones_externas
+    assert r.intentos_por_proxy == ["CONNECT apps.jan.ai:443 HTTP/1.1"]
+    # La app recibe el proxy junto con el perfil limpio.
+    assert macos_simulado["entorno"]["HTTPS_PROXY"] == "http://127.0.0.1:9"
+    assert "HOME" in macos_simulado["entorno"]
