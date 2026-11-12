@@ -218,7 +218,7 @@ def conexion_de_control() -> int:
             lambda *a, **k: _Silencioso(*a, directory=carpeta, **k),
         ) as servidor,
     ):
-        (Path(carpeta) / "control.txt").write_text("valkiria\n", encoding="utf-8")
+        (Path(carpeta) / "control.txt").write_bytes(b"valkiria\n")  # igual en todo SO
         hilo = threading.Thread(target=servidor.serve_forever, daemon=True)
         hilo.start()
         url = f"http://127.0.0.1:{servidor.server_address[1]}/control.txt"
