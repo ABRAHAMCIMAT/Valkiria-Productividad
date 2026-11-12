@@ -10,29 +10,8 @@
 # riesgo = "R-NN"
 # vence = 2027-01-31
 
-[[excepcion]]
-id = "EX-001"
-tipo = "licencia"
-objetivo = "huey"
-motivo = "Dependencia de MLflow. El paquete no declara licencia en sus metadatos; su LICENSE es MIT (revisado a mano el 2026-11-10)."
-responsable = "Oficial de seguridad"
-riesgo = "R-07"
-vence = 2027-05-10
+# EX-001 (huey) y EX-002 (skops) se cerraron el 2026-11-11: sus licencias MIT quedaron como
+# licencias verificadas en security/licencias.toml, fijadas a la versión y al hash del LICENSE.
 
-[[excepcion]]
-id = "EX-002"
-tipo = "licencia"
-objetivo = "skops"
-motivo = "Dependencia de MLflow. El paquete no declara licencia en sus metadatos; su LICENSE es MIT (revisado a mano el 2026-11-10)."
-responsable = "Oficial de seguridad"
-riesgo = "R-07"
-vence = 2027-05-10
-
-[[excepcion]]
-id = "EX-003"
-tipo = "cve"
-objetivo = "apps/desktop"
-motivo = "Dependencias de terceros del fork de Jan v0.8.8. Acotada el 2026-11-11 de 100 a 6 hallazgos altos o críticos (4 CVE distintas) (L6-seguridad/trivy-desktop-remediacion.json). Quedan: (1) crate zip 0.6.6 y 4.6.1, CVE-2026-115905 y CVE-2026-115909, que solo se corrigen en zip 9 y exigen subir tauri 2.11 a 2.12+, tauri-plugin-updater a 2.14.1 y calamine 0.23 a 0.37 con cambios de código Rust; el updater está desactivado (sin endpoints) y los ZIP que se leen son documentos que elige el usuario. (2) tinypool 1.1.1, CVE-2026-104848 y CVE-2026-104849, interno de vitest 3 y solo de pruebas; no llega al instalador. Remediación en F1. El código propio de Valkiria no tiene excepción."
-responsable = "Oficial de seguridad"
-riesgo = "R-13"
-vence = 2026-12-31
+# EX-003 (CVE del fork de Jan) se cerró el 2026-11-11: zip 9.5.1, calamine 0.38, tauri 2.12.5,
+# tauri-plugin-updater 2.14.1 y tinypool 2.2.0 dejan apps/desktop con 0 CVE altas o críticas.

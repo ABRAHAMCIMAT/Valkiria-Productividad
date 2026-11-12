@@ -57,9 +57,9 @@
 
 | ID | Descripción | Responsable | Vence | ADR / Riesgo |
 |---|---|---|---|---|
-| EX-001 | huey: licencia MIT sin declarar en sus metadatos | Oficial de seguridad | 2027-05-10 | R-07 |
-| EX-002 | skops: licencia MIT sin declarar en sus metadatos | Oficial de seguridad | 2027-05-10 | R-07 |
-| EX-003 | Dependencias de terceros de Jan v0.8.8. Acotada después del cierre de 100 a 6 hallazgos (4 CVE): `zip` en Rust y `tinypool`, solo de pruebas (anexo §8) | Oficial de seguridad | 2026-12-31 | R-13 |
+| ~~EX-001~~ | huey: licencia MIT sin declarar en sus metadatos. **Cerrada:** licencia verificada (anexo §9) | Oficial de seguridad | — | R-07 |
+| ~~EX-002~~ | skops: licencia MIT sin declarar en sus metadatos. **Cerrada:** licencia verificada (anexo §9) | Oficial de seguridad | — | R-07 |
+| ~~EX-003~~ | Dependencias de terceros de Jan v0.8.8. **Cerrada:** de 100 a 0 hallazgos (anexos §8 y §9) | Oficial de seguridad | — | R-13 |
 | — | Motor de inferencia como *stub* en el build de F0 | Líder técnico | F1 | ADR-0001 |
 | — | onnxruntime sin *wheels* para Python 3.15 | Ingeniero LLMOps | Antes de F3 | R-11, ADR-0002 |
 | — | ~~Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime~~ **Cerrado:** sin soporte para Mac Intel (anexo §8) | Product Owner | — | R-12, ADR-0002 |
@@ -70,7 +70,7 @@
 |---|---|---|---|---|
 | [ ] | Líder técnico | Carlos Carballo | carlos.carballo@valtre.com | Acta y alcance de F0 |
 | [ ] | Ingeniero LLMOps | Abraham Monsivais | abrahamcimat@me.com | Evidencias L4/L5 y gate de MLflow |
-| [ ] | Oficial de seguridad VALTRE | Pedro de Jesús Lara Luna | pedro.lara@valtre.com | Evidencias L6, incluye aprobar EX-003 |
+| [ ] | Oficial de seguridad VALTRE | Pedro de Jesús Lara Luna | pedro.lara@valtre.com | Evidencias L6 y cierre de EX-001, EX-002 y EX-003 (anexo §9) |
 | [ ] | Product Owner | José Luis Valdez Treviño | luis.valdez@valtre.com | Decisión R-12; D1 resuelta: repositorio público |
 
 **Hallazgos de la prueba de humo resueltos durante F0** (todos de Jan v0.8.8): consulta a `api.github.com` de sus releases en cada arranque, descarga del *embedder* de Hugging Face vía `apps.jan.ai` sin consentimiento, tráfico de fondo de WebView2 hacia Microsoft y `CFBundleIdentifier = jan.ai.app` en su `Info.plist`.
@@ -88,7 +88,7 @@
 - Faltaban la firma de commits y el análisis del SonarQube local; ambos se resolvieron después del cierre (anexos §7 y §8).
 
 **Acciones para F1**
-1. Cerrar EX-003 antes del 2026-12-31: subir `zip` a 9 junto con tauri 2.12+, tauri-plugin-updater 2.14.1 y calamine 0.37, y sacar tinypool 1 (vitest 4). Compilar el motor real de inferencia.
+1. ~~Cerrar EX-003 antes del 2026-12-31.~~ Hecho (anexo §9). Compilar el motor real de inferencia.
 2. Decidir la contingencia de onnxruntime (R-11). R-12 ya está decidido (anexo §8).
 3. Correr `tools/desktop/humo-mac-local.sh --fase F1` en un Mac M4 con macOS 27.2 como evidencia de CA-01.1 y CA-01.3 en macOS.
 4. ~~Recibir el ícono oficial de VALTRE (R-09).~~ Hecho (anexo §8).
@@ -121,3 +121,14 @@ Los commits anteriores a este anexo, incluido el tag `fase-0-cierre`, quedan sin
 | **R-09** · Ícono oficial | El ícono provisional se reemplazó por el símbolo del logo oficial de VALTRE sobre un cuadrado blanco redondeado (rejilla de íconos de macOS). El nombre en blanco del logo no se usa en el ícono porque no se lee en tamaños pequeños. `rebrand.py --check` verifica que el ícono de la app sea el de la marca | `tools/desktop/marca/` (`valtre-logo.png`, `generar_icono.py`) |
 
 Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo registra el estado posterior. `criterios.toml` de F0 conserva los jobs de macOS x64 con los que se cerró la fase; volver a correr su gate sobre un commit nuevo ya no los encontraría. `trazabilidad.csv` actualiza la fila del análisis local de CA-29.4, y `manifest.sha256` se regeneró.
+
+## 9. Anexo: excepciones cerradas (2026-11-11)
+
+Con este anexo F0 queda **sin excepciones de seguridad vigentes** (`security/excepciones.toml` vacío).
+
+| Excepción | Cómo se cerró | Verificación | Evidencia |
+|---|---|---|---|
+| **EX-001** (huey 3.5.4) y **EX-002** (skops 0.16.0) | Ninguna versión publicada declara licencia en sus metadatos, pero sus wheels traen un `LICENSE` MIT. Quedan como **licencias verificadas** (`[[verificada]]` en `security/licencias.toml`), fijadas a la versión y al SHA-256 del texto del `LICENSE`: si cambia cualquiera de los dos, CI vuelve a bloquear hasta revisarlo. Ya no vencen porque el control es exacto | `politica.py licencias`: 43 paquetes de core y 120 de llmops permitidos, sin excepción | `security/licencias.toml`, `tools/tests/test_politica.py` |
+| **EX-003** (6 hallazgos, 4 CVE) | `zip` 0.6/4.6 → 9.5.1 (solo `deflate`), `calamine` 0.23 → 0.38, `tauri` 2.11 → 2.12.5, `tauri-plugin-updater` 2.10 → 2.14.1 y `tinypool` 1.1.1 → 2.2.0. El parser de hojas de cálculo se adaptó a la API nueva de calamine (fechas de libros con sistema 1904) | `trivy fs apps/desktop`: **0** hallazgos. Rust 1.98: `cargo check --all-targets`, 10 pruebas del plugin RAG y 17 del updater. Node 20: 171 pruebas de `@janhq/core`; extensiones y `web-app` con los mismos resultados que antes | `L6-seguridad/trivy-desktop-ex003-cerrada.json`, `apps/desktop/VALKIRIA.md` |
+
+**Tag de cierre.** `fase-0-cierre` apunta al commit con el que se cerró F0 y no se mueve. Cuando estén las cuatro aprobaciones de la sección 5, el Líder técnico crea el tag firmado `fase-0-cierre-v2` sobre el commit de `main` que las registra (`git tag -s fase-0-cierre-v2 -m "F0 cerrada con anexos §7 a §9 y aprobaciones"` y `git push origin fase-0-cierre-v2`).
