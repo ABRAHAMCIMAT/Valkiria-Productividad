@@ -120,7 +120,7 @@ valkiria_core/
 │   └── secrets.py          # SecretStorePort
 ├── adapters/
 │   ├── llm_openai_compat.py   # ChatOpenAI(base_url=Jan) + structured output
-│   ├── embeddings_fastembed.py
+│   ├── embeddings_st.py
 │   ├── lancedb_store.py
 │   ├── sqlite_repos.py        # SQLAlchemy 2 + Alembic
 │   ├── mlflow_tracer.py       # mlflow.langchain.autolog + tags de trazabilidad

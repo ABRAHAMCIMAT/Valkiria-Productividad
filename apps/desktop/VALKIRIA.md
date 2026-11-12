@@ -65,8 +65,8 @@ las 17 del updater pasan. `trivy fs apps/desktop`: 0 hallazgos altos o críticos
   se compila desde F1 (HU-04, HU-05).
 - **Dependencias de terceros:** 0 hallazgos altos o críticos desde el 2026-11-11 (EX-003 cerrada). CI los
   reporta en cada PR y bloquea si aparece uno nuevo sin excepción.
-- **Pruebas de Jan:** 5 pruebas de `llamacpp-extension` (descarga del *embedder*, que Valkiria quitó) y 13
-  de las 4294 pruebas de `web-app` fallan con la marca aplicada porque comprueban
-  el comportamiento original de Jan (etiqueta «Jan», consulta de releases a GitHub, asistente por defecto).
-  No forman parte del CI de Valkiria; se adaptan en F1.
+- **Pruebas de Jan:** las 5 de `llamacpp-extension` y las 13 de `web-app` que comprobaban el
+  comportamiento original de Jan (descarga del *embedder* sin consentimiento, etiqueta «Jan», consulta de
+  releases a GitHub, asistente por defecto) se adaptaron a la marca el 2026-11-12, con pruebas nuevas de
+  RN-01.3. El job «Pruebas de la app (vitest)» de `desktop.yml` corre core, `web-app` y extensiones.
 - **Sin firma:** los instaladores de CI no están firmados ni notarizados (F10, HU-26).
