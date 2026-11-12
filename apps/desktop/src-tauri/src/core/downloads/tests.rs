@@ -389,27 +389,15 @@ fn test_download_item_deserialization() {
 // ===== convert_to_mirror_url =====
 
 #[test]
-fn test_convert_to_mirror_url_huggingface() {
-    let url = "https://huggingface.co/some/repo/resolve/main/model.gguf";
-    let mirror = convert_to_mirror_url(url).expect("should produce a mirror url");
-    assert!(mirror.starts_with("https://apps") && mirror.contains(".jan.ai/"));
-    assert!(mirror.ends_with("huggingface.co/some/repo/resolve/main/model.gguf"));
-}
-
-#[test]
-fn test_convert_to_mirror_url_huggingface_subdomain() {
-    // Subdomains of mirror domains should also be mirrored
-    let url = "https://cdn.huggingface.co/file.bin";
-    let mirror = convert_to_mirror_url(url).expect("subdomain should mirror");
-    assert!(mirror.ends_with("cdn.huggingface.co/file.bin"));
-}
-
-#[test]
-fn test_convert_to_mirror_url_http_scheme() {
-    let url = "http://huggingface.co/file";
-    let mirror = convert_to_mirror_url(url).expect("http should be stripped too");
-    assert!(mirror.ends_with("huggingface.co/file"));
-    assert!(!mirror.contains("http://huggingface.co"));
+fn test_convert_to_mirror_url_valkiria_sin_espejo_de_jan() {
+    // Valkiria (RN-01.3): ninguna descarga se desvía al espejo de Jan (apps.jan.ai).
+    for url in [
+        "https://huggingface.co/some/repo/resolve/main/model.gguf",
+        "https://cdn.huggingface.co/file.bin",
+        "http://huggingface.co/file",
+    ] {
+        assert!(convert_to_mirror_url(url).is_none(), "{url} no debe ir a un espejo");
+    }
 }
 
 #[test]

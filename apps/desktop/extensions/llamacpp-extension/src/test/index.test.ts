@@ -1011,6 +1011,47 @@ describe('bootstrapDefaultEmbedder', () => {
   })
 })
 
+describe('ensureEmbeddingModelLoaded · Valkiria (RN-01.3)', () => {
+  let extension: llamacpp_extension
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    extension = new llamacpp_extension()
+    vi.spyOn(extension, 'list').mockResolvedValue([] as never)
+    vi.spyOn(extension as never, 'findSessionByModel').mockResolvedValue(undefined as never)
+    vi.spyOn(extension, 'load').mockResolvedValue({
+      model_id: 'sentence-transformer-mini',
+      port: 1234,
+    } as never)
+  })
+
+  it('sin el consentimiento de la configuración inicial no descarga el embedder', async () => {
+    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    const importSpy = vi.spyOn(extension, 'import')
+
+    await expect(extension['ensureEmbeddingModelLoaded']()).rejects.toThrow(
+      /no se descarga sin el consentimiento/
+    )
+    expect(importSpy).not.toHaveBeenCalled()
+    expect(extension.load).not.toHaveBeenCalled()
+  })
+
+  it('con el consentimiento lo descarga y lo carga', async () => {
+    withSetupConsent()
+    const importSpy = vi
+      .spyOn(extension, 'import')
+      .mockResolvedValue(undefined as never)
+
+    const sInfo = await extension['ensureEmbeddingModelLoaded']()
+
+    expect(importSpy).toHaveBeenCalledWith(
+      'sentence-transformer-mini',
+      expect.objectContaining({ modelPath: expect.stringContaining('MiniLM') })
+    )
+    expect(sInfo).toMatchObject({ model_id: 'sentence-transformer-mini' })
+  })
+})
+
 describe('verifyEmbeddingModel', () => {
   let extension: llamacpp_extension
 
