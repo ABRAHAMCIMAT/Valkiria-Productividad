@@ -158,3 +158,30 @@ Con este anexo F0 queda **sin excepciones de seguridad vigentes** (`security/exc
 | **Paquete de evidencias** · Integridad | `tools/evidencias/manifiesto.py` genera y verifica `manifest.sha256`: falla si un hash no coincide, si una ruta se repite (el error que se corrigió en el anexo §10), si falta un archivo o si hay uno sin listar. `armar.sh` lo usa para generar y CI lo verifica en cada PR para todos los paquetes `evidencias/F*` | `tools/evidencias/manifiesto.py`, `ci.yml` (Seguridad) |
 
 **Sin cambios, a propósito:** los commits anteriores al anexo §7 siguen sin firma, porque reescribir el historial de `main` no es aceptable; el *ruleset* ya exige firma a todo lo nuevo. El motor de inferencia real es alcance de F1 (HU-04). `manifest.sha256` se regeneró con `manifiesto.py`.
+
+## 12. Anexo: corrección de CA-01.3 en el primer arranque (2026-11-12)
+
+**Hallazgo.** Con un perfil limpio, sin que el usuario pulsara «Let's start», la app descargaba el *embedder* de respaldo `sentence-transformer-mini` de Hugging Face: un `HEAD` a huggingface.co, un `GET` por el espejo de Jan (`apps.jan.ai`, con firma HMAC) y un `GET` directo. Esto incumple RN-01.3 y CA-01.3. **El gate «Conexiones salientes de la app = 0» de la sección 3 era un falso negativo**, por dos razones:
+- `smoke.py` muestreaba sockets cada 2 s y estas conexiones duran milisegundos.
+- En el Mac la prueba corría con el perfil del usuario, que ya había hecho la configuración inicial.
+
+| Causa | Corrección (PR #19) |
+|---|---|
+| `ensureEmbeddingModelLoaded()` importaba el *embedder* sin revisar el consentimiento. Lo recorren `embed()`, `getEmbeddingContextSize()` y `verifyEmbeddingModel()`; la protección del anexo §8 solo cubría `bootstrapDefaultEmbedder()` | Exige el consentimiento de la configuración inicial antes de importar. Dos pruebas nuevas en `llamacpp-extension` (416/416) |
+| `downloads/helpers.rs` desviaba toda descarga de Hugging Face al espejo de Jan | `MIRROR_DOMAINS` vacío: las descargas van directo a la URL que el usuario autorizó |
+| La prueba no veía conexiones cortas ni corría como primer arranque | `smoke.py` abre la app con `HTTPS_PROXY`/`HTTP_PROXY`/`ALL_PROXY` hacia un proxy local que anota y rechaza cada petición (`NO_PROXY` para loopback). En macOS además usa `HOME` temporal. Contra la build anterior detectó los 3 intentos en 2 de 2 corridas |
+
+**Verificación.**
+- **Windows:** CI corrió «Build y humo Windows x64» con el proxy activo, en verde.
+- **macOS:** en el Mac M4, con perfil limpio y **sin interacción**, sobre el build del PR #19 (`f59372e`, run 43282812908): la app siguió viva a los 300 s con **0 conexiones** por `lsof`, **0 intentos** por el proxy y **0** en el registro de Network.framework. Se vio la conexión de control.
+- **Captura:** muestra la pantalla de configuración inicial con la marca, sin datos personales.
+
+**Notas de la prueba.**
+- Las corridas intermedias en las que hubo intentos a huggingface.co con el build corregido fueron con interacción: alguien pulsó «Let's start», que es el consentimiento, o cerró la ventana. La prueba exige no tocar la app durante los 300 s.
+- Con `HOME` temporal los datos de la app se aíslan, pero WebKit usa siempre `~/Library/WebKit` del usuario.
+
+**Pendientes que deja este hallazgo:**
+- La app crea `~/Library/Application Support/Jan` en el primer arranque, un resto de la marca de Jan (RN-01.1).
+- CI no corre `cargo test`, así que el cambio del espejo no tiene prueba automática en CI.
+
+Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo corrige el de conexiones salientes. `manifest.sha256` se regeneró con `manifiesto.py`.
