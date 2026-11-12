@@ -55,6 +55,8 @@ export default defineConfig({
     VERSION: JSON.stringify('test'),
     POSTHOG_KEY: JSON.stringify(''),
     POSTHOG_HOST: JSON.stringify(''),
-    AUTO_UPDATER_DISABLED: JSON.stringify('false'),
+    // Valkiria: booleano, como en vite.config.ts. La cadena 'false' de Jan era verdadera y
+    // desactivaba el updater en todas las pruebas sin que se notara.
+    AUTO_UPDATER_DISABLED: JSON.stringify(false),
   },
 })

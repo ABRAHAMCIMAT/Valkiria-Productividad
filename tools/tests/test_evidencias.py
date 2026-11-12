@@ -1,6 +1,7 @@
 """Trazabilidad de fase (docs/05 §4.2) y alcance de Sonar (CA-29.5)."""
 
 import csv
+import hashlib
 import json
 import subprocess
 import sys
@@ -9,6 +10,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "evidencias"))
+import manifiesto
 import trazabilidad
 
 RAIZ = Path(__file__).resolve().parents[2]
@@ -120,3 +122,51 @@ def test_confinar_admite_runner_temp(tmp_path: Path, monkeypatch: pytest.MonkeyP
     monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
     assert trazabilidad.confinar(tmp_path / "x.csv").name == "x.csv"
     assert trazabilidad.confinar(trazabilidad.RAIZ_REPO / "evidencias").name == "evidencias"
+
+
+# ---------------- manifest.sha256 ----------------
+def _paquete(tmp_path: Path) -> Path:
+    pkg = tmp_path / "F9"
+    (pkg / "L4").mkdir(parents=True)
+    (pkg / "cierre.md").write_bytes(b"acta\r\n")  # byte a byte: sin normalizar fines de línea
+    (pkg / "L4" / "b.json").write_text("{}\n")
+    (pkg / "manifest-ci.sha256").write_text("x  y\n")
+    return pkg
+
+
+def test_manifiesto_generar_y_verificar(tmp_path: Path) -> None:
+    pkg = _paquete(tmp_path)
+    assert manifiesto.generar(pkg) == 3
+    lineas = (pkg / "manifest.sha256").read_text().splitlines()
+    # Orden de bytes de la ruta, como LC_ALL=C sort; manifest-ci.sha256 sí se lista.
+    rutas = [linea.split("  ")[1] for linea in lineas]
+    assert rutas == ["L4/b.json", "cierre.md", "manifest-ci.sha256"]
+    assert lineas[1].split("  ")[0] == hashlib.sha256(b"acta\r\n").hexdigest()
+    assert manifiesto.verificar(pkg) == []
+    assert manifiesto.main(["verificar", str(pkg)]) == 0
+
+
+def test_manifiesto_detecta_cambios_duplicados_y_huerfanos(tmp_path: Path) -> None:
+    pkg = _paquete(tmp_path)
+    manifiesto.generar(pkg)
+    (pkg / "cierre.md").write_bytes(b"acta cambiada\n")
+    (pkg / "nuevo.txt").write_text("sin listar\n")
+    (pkg / "L4" / "b.json").unlink()
+    m = pkg / "manifest.sha256"
+    m.write_text(m.read_text() + m.read_text().splitlines()[1] + "\nbasura\n")
+    problemas = manifiesto.verificar(pkg)
+    assert any("cierre.md aparece dos veces" in p for p in problemas)
+    assert any("mal formada" in p for p in problemas)
+    assert any("falta L4/b.json" in p for p in problemas)
+    assert any("cierre.md no coincide" in p for p in problemas)
+    assert any("nuevo.txt no está en el manifiesto" in p for p in problemas)
+    assert manifiesto.main(["verificar", str(pkg)]) == 1
+
+
+def test_manifiesto_ausente_y_main_generar(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    pkg = _paquete(tmp_path)
+    assert manifiesto.verificar(pkg) == [f"{pkg}: no tiene manifest.sha256"]
+    assert manifiesto.main(["generar", str(pkg)]) == 0
+    assert "3 archivos" in capsys.readouterr().out

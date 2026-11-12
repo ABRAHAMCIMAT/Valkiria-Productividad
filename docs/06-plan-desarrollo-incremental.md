@@ -114,7 +114,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 
 **Alcance:**
 - Carpetas vigiladas (`watchfiles`).
-- Docling para PDF, DOCX, XLSX, PPTX, HTML y MD.
+- Docling (`docling-slim` con extras, ADR-0009) para PDF, DOCX, XLSX, PPTX, HTML y MD, con un adaptador propio en Core.
 - `RecursiveCharacterTextSplitter` por tokens: 512 tokens con 64 de traslape, guardando la página y la sección.
 - Embeddings con sentence-transformers sobre torch (e5-small o bge-m3 según el perfil; ADR-0002, R-11).
 - LanceDB con búsqueda híbrida (vector + FTS) con RRF, y re-ranker en el perfil Avanzado.
@@ -174,7 +174,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 
 **Alcance:**
 - Qwen3-VL bajo demanda para imágenes y PDFs escaneados por tramos, con política de un solo modelo grande cargado.
-- RapidOCR como respaldo, si onnxruntime ya publica *wheels* `cp315` (R-11); si no, el VLM es la única vía.
+- OCR del sistema operativo como respaldo: Apple Vision (`ocrmac`) en macOS y Windows.Media.Ocr o tesserocr en Windows (ADR-0009).
 - Dictado con whisper.cpp (`large-v3-turbo` en el perfil Avanzado y `small` en el Estándar).
 
 **Criterio de salida:**
@@ -233,7 +233,7 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 
 | ID | Riesgo | Prob. | Impacto | Mitigación | Responsable |
 |---|---|---|---|---|---|
-| R-01 | Dependencias críticas (onnxruntime, lancedb, docling, pyinstaller) sin *wheels* para Python 3.15 en Windows o macOS | Media | Alto | *Spike* en F0; matriz de CI 3.15; contingencia temporal en 3.14 documentada en ADR-0002 con fecha de vencimiento | Líder técnico |
+| R-01 | Dependencias críticas (onnxruntime, lancedb, docling, pyinstaller) sin *wheels* para Python 3.15 en Windows o macOS | Media | Alto | *Spike* en F0; matriz de CI 3.15; contingencia temporal en 3.14 documentada en ADR-0002 con fecha de vencimiento. Desde 2026-11-12 el spike mide con `tools/deps/solo-wheels.sh`, que detectó pyclipper y tree-sitter sin `cp315` (se evitan con `docling-slim`) | Líder técnico |
 | R-02 | Uso de herramientas poco fiable en modelos de 4 a 8 B | Alta | Alto | Router, JSON schema, pocas herramientas, gate en F4 | Ingeniero LLMOps |
 | R-03 | Cambios en Jan upstream que rompen el fork | Media | Medio | *Subtree* con sincronización trimestral; la lógica propia vive en la extensión, no en el núcleo de Jan | Líder técnico |
 | R-04 | Falsos positivos del antivirus por el sidecar de PyInstaller | Media | Medio | Firma Authenticode; *onedir*; envío a Microsoft para análisis | DevOps |
@@ -243,6 +243,6 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 | R-08 | Repositorio privado en plan Free: sin reglas de protección de ramas y minutos de macOS multiplicados ×10 | — | — | **Cerrado el 2026-11-11:** los minutos se agotaron durante F0 y el repositorio se hizo público (D1). *Ruleset* `main` con PR obligatorio y checks requeridos | Líder técnico |
 | R-09 | ~~Faltan los recursos de marca oficiales de VALTRE (ícono y textos)~~ | — | — | **Cerrado (2026-11-11):** el ícono se genera del logo oficial de VALTRE (`tools/desktop/marca/valtre-logo.png`). Los textos de marca ya estaban en F0 | Product Owner |
 | R-10 | El código propio supera el límite de líneas del plan Free de SonarQube Cloud | Baja | Medio | Alerta al 80 % en `export-metrics.sh` (RN-29.6) | Líder técnico |
-| R-11 | onnxruntime sin *wheels* para Python 3.15 (spike de F0). **Mitigado (2026-11-12):** el *embedder* de F3 pasa a `sentence-transformers` sobre torch 2.15 (`cp315`), probado en Mac M4 con Python 3.15 (ADR-0002). Solo queda el respaldo RapidOCR de F8 | Baja | Medio | Revisar al iniciar F8: VLM como única vía de OCR o contingencia 3.14 acotada a RapidOCR; `spike-deps.yml` vigila la pila cada semana | Ingeniero LLMOps |
+| R-11 | ~~onnxruntime sin *wheels* para Python 3.15~~ | — | — | **Cerrado (2026-11-12):** Valkiria no depende de onnxruntime. El *embedder* usa `sentence-transformers` sobre torch y el OCR de respaldo usa el motor del SO (Apple Vision en macOS; Windows.Media.Ocr o tesserocr en Windows). Docling se instala como `docling-slim` con extras, sin rapidocr (ADR-0002, ADR-0009); `spike-deps.yml` lo vigila cada semana | Ingeniero LLMOps |
 | R-12 | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | — | — | **Cerrado el 2026-11-11:** Valkiria no soporta Mac Intel. El mínimo de macOS es Apple Silicon M4 o posterior con macOS 27.2+; la app declara `LSMinimumSystemVersion` 27.2 y la prueba de humo de macOS corre en un Mac M4 (ADR-0002) | Product Owner |
 | R-13 | Jan v0.8.8 traía ~100 CVE altas o críticas en dependencias de terceros. **Mitigado (2026-11-11): 0 hallazgos.** *Resolutions* de yarn, limpieza de dependencias sin uso, `quinn-proto` 0.11.15, tinypool 2.2.0, zip 9, calamine 0.38, tauri 2.12 y tauri-plugin-updater 2.14; EX-003 cerrada | Baja | Medio | Trivy en cada CI bloquea cualquier CVE nueva sin excepción; al sincronizar un tag de Jan, conservar los cambios de `apps/desktop/VALKIRIA.md` | Oficial de seguridad |

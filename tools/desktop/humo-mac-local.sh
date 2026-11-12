@@ -55,6 +55,10 @@ fi
 SHA=$(gh run view "$RUN" --json headSha --jq .headSha)
 URL=$(gh run view "$RUN" --json url --jq .url)
 echo "Run $RUN ($URL) · commit $SHA"
+MAIN=$(gh api "repos/{owner}/{repo}/commits/main" --jq .sha)
+if [[ $SHA != "$MAIN" ]]; then
+  echo "Aviso: el artefacto es de $SHA y main está en $MAIN; la evidencia no será de main actual." >&2
+fi
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -69,22 +73,25 @@ xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true
 ARCHS=$(lipo -archs "$APP/Contents/MacOS/Valkiria-Productividad")
 
 # ---------- 3. Prueba de humo y evidencia ----------
+# Con --fase, rm -rf limpia la evidencia anterior para que no se mezclen dos corridas.
 if [[ -n $FASE ]]; then
   SALIDA="evidencias/$FASE/L4-desarrollo/escritorio/humo-macos-m4"
 else
   SALIDA="reports/smoke-macos-m4/${SHA:0:12}"
 fi
+[[ -n $FASE ]] && rm -rf "$SALIDA"
 mkdir -p "$SALIDA"
 python3 -I - "$SALIDA/entorno.json" "$CHIP" "$MODELO" "$MACOS" "$BUILD" "$RUN" "$URL" "$SHA" \
-  "$ZIP_SHA" "$ARCHS" "$SEGUNDOS" <<'PY'
+  "$ZIP_SHA" "$ARCHS" "$SEGUNDOS" "$MAIN" <<'PY'
 import datetime, json, sys
-out, chip, modelo, macos, build, run, url, sha, zip_sha, archs, segundos = sys.argv[1:]
+out, chip, modelo, macos, build, run, url, sha, zip_sha, archs, segundos, main = sys.argv[1:]
 doc = {
     "fecha": datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds"),
     "equipo": {"chip": chip, "modelo": modelo, "macos": macos, "build": build},
     "minimo": {"chip": "Apple M4", "macos": "27.2"},
     "artefacto": {"run_id": run, "url": url, "commit": sha, "zip_sha256": zip_sha, "arquitecturas": archs},
     "segundos": int(segundos),
+    "main": {"commit": main, "artefacto_es_de_main_actual": sha == main},
 }
 with open(out, "w", encoding="utf-8") as f:
     json.dump(doc, f, indent=2, ensure_ascii=False)

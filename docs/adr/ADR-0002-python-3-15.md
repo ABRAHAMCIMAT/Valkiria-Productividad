@@ -53,7 +53,32 @@ onnxruntime 1.31.1, su última versión, sigue sin *wheels* `cp315`. Se probó l
 **Decisión: el *embedder* de F3 es `sentence-transformers` sobre torch, en lugar de fastembed sobre onnxruntime.** Los modelos del catálogo no cambian (e5-small y bge-m3, ADR-0011), ni se necesita la contingencia 3.14 para F3.
 
 **Consecuencias:**
-- R-11 queda **mitigado**. Solo depende de onnxruntime el respaldo de OCR de F8 (RapidOCR), ya que la vía principal es el VLM sobre llama.cpp. Se revisa al iniciar F8: si para entonces no hay *wheels* `cp315`, se usa solo el VLM o la contingencia 3.14 acotada a ese respaldo.
+- R-11 queda **mitigado** para F3. El OCR de respaldo se resolvió en la segunda revisión (abajo).
 - torch pesa más que onnxruntime en el *sidecar* de PyInstaller (F2). Se mide el tamaño del instalador en F3 y, si hace falta, se usa la variante de torch solo CPU en Windows.
 - EasyOCR no sirve como respaldo en 3.15: solo resuelve versiones antiguas, compiladas contra numpy 1.
 - `spike-deps.yml` verifica cada semana la pila del *embedder* en Windows y macOS, exigiendo *wheels* para las dependencias nativas.
+
+## Segunda revisión 2026-11-12 · R-11 cerrado, OCR y Docling
+
+**Cómo se mide.** `--only-binary :all:` daba falsos negativos: cualquier dependencia transitiva sin *wheel* pero con respaldo en Python puro (pyyaml) hacía fallar a paquetes como langgraph o mlflow-skinny. También daba falsos positivos al probar a mano sin esa opción, porque uv compilaba en silencio las extensiones nativas cuando había compilador. [`tools/deps/solo-wheels.sh`](../../tools/deps/solo-wheels.sh) resuelve el árbol completo y exige *wheel* a cada dependencia, salvo a las de respaldo puro verificado (solo pyyaml). Es lo que corre `spike-deps.yml`.
+
+**Resultado en macOS arm64 con Python 3.15** (Windows lo confirma el spike semanal):
+
+| Paquete | Resultado | Causa |
+|---|---|---|
+| langgraph, mlflow-skinny, presidio-analyzer, spacy, sentence-transformers, lancedb, pyinstaller, torch | ✔ | Los fallos anteriores eran falsos negativos |
+| `docling-slim[convert-core,format-pdf,format-office,format-html,format-markdown,models-local]` 2.150 | ✔ | Sin rapidocr, sin onnxruntime y sin tree-sitter |
+| `docling-slim[feat-ocr-mac]` + ocrmac 1.0.1 (Apple Vision, MIT) | ✔ | `pyobjc-framework-Vision` publica `cp315` |
+| docling 2.150 completo, rapidocr 3.10 | ✗ | pyclipper 1.4.0 (C++) no publica `cp315` |
+| `docling-slim[feat-chunking]`, langchain-docling 3.0 | ✗ | tree-sitter no publica `cp315` |
+| onnxruntime 1.31.1, fastembed | ✗ | Sin `cp315` |
+
+**Prueba funcional.** Un PDF escaneado (solo imagen) de tres líneas en español:
+- `docling-slim` mínimo + ocrmac reconoció **3 de 3** frases, sin onnxruntime ni pyclipper instalados.
+- RapidOCR 3.10 con su motor **torch** (sin onnxruntime) reconoció 3 de 3, pero solo instala si pyclipper se compila desde el código fuente.
+
+**Decisión:**
+1. **R-11 cerrado.** Valkiria no depende de onnxruntime: el *embedder* usa torch (primera revisión) y el OCR de respaldo de F8 usa el motor del sistema operativo. En macOS es Apple Vision (`ocrmac`). En Windows se elige en F8 entre Windows.Media.Ocr (`winrt-Windows.Media.Ocr`, MIT, con `cp315`) y tesserocr (MIT, con `cp315`); `spike-deps.yml` vigila tesserocr. La vía principal sigue siendo el VLM.
+2. **Docling se instala como `docling-slim` con extras explícitos**, no como el paquete `docling`, que trae rapidocr y pyclipper (ADR-0009).
+3. **No se usa `langchain-docling`**: Core trae un adaptador propio y delgado, y el troceo lo hace `langchain-text-splitters`, que ya era el plan de F3.
+4. Si RapidOCR llegara a hacer falta, el *build* de Windows tendría que compilar pyclipper con MSVC. Se documenta como alternativa, no como plan.

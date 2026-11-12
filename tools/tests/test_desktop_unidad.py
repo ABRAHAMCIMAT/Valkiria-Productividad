@@ -1,8 +1,11 @@
 """Pruebas independientes del SO para rebrand.py y smoke.py (HU-01)."""
 
+import contextlib
 import json
 import plistlib
 import sys
+import types
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -145,11 +148,39 @@ def macos_simulado(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str,
     )
     (app / "Contents" / "MacOS").mkdir()
     (app / "Contents" / "MacOS" / "Valkiria-Productividad").write_bytes(b"")
+    control = {"pid": 7000}
     estado: dict[str, Any] = {
         "app": app,
         "conexiones": ["127.0.0.1:1337"],
         "proceso": ProcesoFalso(),
+        "ventana": 77,
+        # Registro de Network.framework: la conexión de control a loopback y las de la app.
+        "registro": [
+            {
+                "processID": 7000,
+                "processImagePath": "/usr/bin/nscurl",
+                "eventMessage": "[C1 IPv4#ec5f:5000 in_progress (interface: lo0)]",
+            },
+            {
+                "processID": 900,
+                "processImagePath": "/x/com.apple.WebKit.Networking",
+                "eventMessage": "[C4 IPv4#ab12:1337 quic, pid: 4242] (interface: lo0)",
+            },
+        ],
     }
+
+    @contextlib.contextmanager
+    def registro_falso(ejecutable: str, carpeta: Path) -> Iterator[Path]:
+        assert ejecutable == "Valkiria-Productividad"
+        archivo = carpeta / "registro-red.ndjson"
+        yield archivo
+        archivo.write_text(
+            "Filtering the log data\n" + "".join(json.dumps(e) + "\n" for e in estado["registro"])
+        )
+
+    monkeypatch.setattr(smoke, "registro_red_macos", registro_falso)
+    monkeypatch.setattr(smoke, "conexion_de_control", lambda: control["pid"])
+    monkeypatch.setattr(smoke, "ventana_macos", lambda pids: estado["ventana"])
     monkeypatch.setattr(smoke.platform, "system", lambda: "Darwin")
     monkeypatch.setattr(smoke.subprocess, "Popen", lambda *a, **k: estado["proceso"])
     monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
@@ -181,7 +212,48 @@ def test_ca_01_3_macos_sin_conexiones_externas(
     assert r.conexiones_loopback > 0
     assert macos_simulado["proceso"].terminado
     assert (tmp_path / "out" / f"ventana-{r.so}.png").exists()
+    assert r.captura == "ventana 77 de la app"
+    assert r.registro_red["control_loopback_visto"] is True
+    (c,) = r.registro_red["conexiones_de_la_app"]  # type: ignore[misc]
+    assert c["interfaces"] == ["lo0"]
+    assert c["externa"] is False
+    assert not (tmp_path / "out" / "registro-red.ndjson").exists()  # el crudo no se guarda
     assert json.loads((tmp_path / "out" / f"smoke-{r.so}.json").read_text())["ok"] is True
+
+
+def test_ca_01_3_macos_webview_externo_por_registro_falla(
+    macos_simulado: dict[str, Any], tmp_path: Path
+) -> None:
+    """Una conexión del WebView no aparece en lsof, pero sí en el registro de red."""
+    macos_simulado["registro"].append(
+        {
+            "processID": 900,
+            "processImagePath": "/x/com.apple.WebKit.Networking",
+            "eventMessage": "[C5 Hostname#fe2e:443 quic, pid: 4243] (interface: en0)",
+        }
+    )
+    r = smoke.ejecutar(macos_simulado["app"], 10, tmp_path)
+    assert not r.ok
+    assert r.conexiones_externas == ["com.apple.WebKit.Networking C5 vía en0"]
+
+
+def test_ca_01_3_macos_sin_control_no_es_verificable(
+    macos_simulado: dict[str, Any], tmp_path: Path
+) -> None:
+    macos_simulado["registro"] = []
+    r = smoke.ejecutar(macos_simulado["app"], 10, tmp_path)
+    assert not r.ok
+    assert any("no es verificable" in e for e in r.errores)
+
+
+def test_captura_macos_sin_ventana_o_sin_permiso(
+    macos_simulado: dict[str, Any], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    macos_simulado["ventana"] = None
+    assert "no tiene una ventana" in smoke.captura_macos(tmp_path / "a.png", {1})
+    macos_simulado["ventana"] = 5
+    monkeypatch.setattr(smoke, "_ejecutar", lambda cmd: "")  # sin permiso: no escribe nada
+    assert "Grabación de pantalla" in smoke.captura_macos(tmp_path / "b.png", {1})
 
 
 def test_ca_01_3_macos_conexion_externa_falla(
@@ -242,7 +314,7 @@ def test_funciones_windows(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
         ("[::1]:80", "msedgewebview2"),
         ("20.1.1.1:443", "bun"),
     ]
-    smoke.captura_windows(tmp_path / "v.png")
+    assert smoke.captura_windows(tmp_path / "v.png", {10}) == "sin captura"
     assert recibidas[0] == {"ruta": str(tmp_path / "x.exe")}
     assert recibidas[-1] == {"destino": str(tmp_path / "v.png")}
 
@@ -304,3 +376,113 @@ def test_sin_posthog_quita_solo_posthog() -> None:
     )
     assert rebrand.sin_posthog(fuentes) == "'self' https://notposthog.com 'unsafe-eval'"
     assert rebrand.sin_posthog("'self'") == "'self'"
+
+
+# ------------------------------------------- registro de red y captura (dobles portables)
+def test_conexion_de_control_sirve_por_loopback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El servidor de control es real; nscurl se reemplaza por una petición HTTP equivalente."""
+    import urllib.request
+
+    pedidas: list[str] = []
+
+    class NscurlFalso:
+        pid = 31337
+
+        def __init__(self, cmd: list[str], **_: object) -> None:
+            assert cmd[:3] == ["/usr/bin/nscurl", "-o", smoke.os.devnull]
+            assert cmd[3].startswith("http://127.0.0.1:")
+            with urllib.request.urlopen(cmd[3], timeout=10) as r:  # noqa: S310  # nosec B310
+                pedidas.append(r.read().decode())
+
+        def wait(self, timeout: float) -> int:
+            return 0
+
+    monkeypatch.setattr(smoke.subprocess, "Popen", NscurlFalso)
+    assert smoke.conexion_de_control() == 31337
+    assert pedidas == ["valkiria\n"]
+
+
+def test_registro_red_macos_lanza_y_detiene_log_stream(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    lanzados: list[list[str]] = []
+
+    class StreamFalso:
+        def __init__(self, cmd: list[str], stdout: Any, **_: object) -> None:
+            lanzados.append(cmd)
+            stdout.write('{"processID": 1, "eventMessage": "[C1 a:1 (interface: lo0)]"}\n')
+            self.terminado = False
+
+        def terminate(self) -> None:
+            self.terminado = True
+
+        def wait(self, timeout: float) -> int:
+            return 0
+
+    monkeypatch.setattr(smoke.subprocess, "Popen", StreamFalso)
+    monkeypatch.setattr(smoke.time, "sleep", lambda s: None)
+    with smoke.registro_red_macos("Valkiria-Productividad", tmp_path) as archivo:
+        pass
+    (cmd,) = lanzados
+    assert cmd[:6] == ["/usr/bin/log", "stream", "--style", "ndjson", "--level", "info"]
+    assert cmd[-1] == smoke.predicado_red("Valkiria-Productividad")
+    (evento,) = smoke.leer_eventos(archivo.read_text().splitlines())
+    assert evento["processID"] == 1
+
+
+def _coregraphics_falso(ventanas: list[dict[str, int]]) -> dict[str, Any]:
+    """Dobles de CoreGraphics y CoreFoundation con la forma de las llamadas que usa smoke."""
+    liberados: list[object] = []
+
+    def funcion(f: Any) -> Any:
+        return f  # las funciones aceptan restype/argtypes como atributos
+
+    cg = types.SimpleNamespace(
+        CGWindowListCopyWindowInfo=funcion(lambda opciones, relativa: "lista" if ventanas else None)
+    )
+    cf = types.SimpleNamespace(
+        CFArrayGetCount=funcion(lambda lista: len(ventanas)),
+        CFArrayGetValueAtIndex=funcion(lambda lista, i: i),
+        CFStringCreateWithCString=funcion(lambda a, texto, cod: texto.decode()),
+        CFDictionaryGetValue=funcion(lambda i, clave: (i, clave) if clave in ventanas[i] else 0),
+        CFNumberGetValue=funcion(
+            lambda valor, tipo, ref: (
+                setattr(ref._obj, "value", ventanas[valor[0]][valor[1]]) or True
+            )
+        ),
+        CFRelease=funcion(lambda objeto: liberados.append(objeto)),
+    )
+    return {"cg": cg, "cf": cf, "liberados": liberados}
+
+
+def test_ventana_macos_elige_la_ventana_normal_de_la_app(monkeypatch: pytest.MonkeyPatch) -> None:
+    falso = _coregraphics_falso(
+        [
+            {"kCGWindowOwnerPID": 1, "kCGWindowLayer": 0, "kCGWindowNumber": 10},  # otra app
+            {"kCGWindowOwnerPID": 42, "kCGWindowLayer": 25, "kCGWindowNumber": 11},  # menú
+            {"kCGWindowOwnerPID": 42, "kCGWindowLayer": 0, "kCGWindowNumber": 12},
+        ]
+    )
+    monkeypatch.setattr(
+        smoke.ctypes, "CDLL", lambda ruta: falso["cg"] if "CoreGraphics" in ruta else falso["cf"]
+    )
+    assert smoke.ventana_macos({42, 43}) == 12
+    assert "lista" in falso["liberados"]  # se libera lo que se copió
+    assert smoke.ventana_macos({99}) is None
+
+
+def test_ventana_macos_sin_lista(monkeypatch: pytest.MonkeyPatch) -> None:
+    falso = _coregraphics_falso([])
+    monkeypatch.setattr(
+        smoke.ctypes, "CDLL", lambda ruta: falso["cg"] if "CoreGraphics" in ruta else falso["cf"]
+    )
+    assert smoke.ventana_macos({42}) is None
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="registro unificado solo en macOS")
+def test_registro_red_real_ve_la_conexion_de_control(tmp_path: Path) -> None:
+    """Con el SO real: log stream debe ver la conexión de control de nscurl por lo0."""
+    with smoke.registro_red_macos("Valkiria-Productividad", tmp_path) as archivo:
+        pid = smoke.conexion_de_control()
+    eventos = list(smoke.leer_eventos(archivo.read_text(encoding="utf-8").splitlines()))
+    assert any("lo0" in c.interfaces for c in smoke.conexiones_registradas(eventos, {pid}))

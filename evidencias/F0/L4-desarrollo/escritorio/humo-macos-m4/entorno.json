@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-12T13:55:31+00:00",
+  "fecha": "2026-11-12T16:15:19+00:00",
   "equipo": {
     "chip": "Apple M4",
     "modelo": "Mac16,1",
@@ -11,11 +11,15 @@
     "macos": "27.2"
   },
   "artefacto": {
-    "run_id": "43136052400",
-    "url": "https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/43136052400",
-    "commit": "8a5807f55bb8f75970382fa89c33c9b059b1337a",
-    "zip_sha256": "98e45a09f09aed6072768e188ec03a7581e1b7dac42cf4cd60df7e99626acad4",
+    "run_id": "43249654412",
+    "url": "https://github.com/ABRAHAMCIMAT/Valkiria-Productividad/actions/runs/43249654412",
+    "commit": "cd1f797d44b88a7d053d56383d25c92b4f6ea2b4",
+    "zip_sha256": "0435fcffa929c095df03aa755a92a453ab07a0f3bcd5bcfb194f68b4c5e01b9b",
     "arquitecturas": "arm64"
   },
-  "segundos": 300
+  "segundos": 300,
+  "main": {
+    "commit": "cd1f797d44b88a7d053d56383d25c92b4f6ea2b4",
+    "artefacto_es_de_main_actual": true
+  }
 }

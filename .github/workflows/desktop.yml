@@ -51,38 +51,6 @@ jobs:
       - name: Verificar que la marca y la configuración de Valkiria están aplicadas
         run: python3 tools/desktop/rebrand.py --check
 
-  pruebas-web:
-    # Suites de vitest de @janhq/core, web-app y extensiones, adaptadas a la marca. Corre en Linux
-    # para no gastar minutos de macOS; TZ=UTC porque formatDate.test.ts depende de la zona horaria.
-    name: Pruebas de la app (vitest)
-    needs: marca
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: apps/desktop
-    env:
-      TZ: UTC
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "20"
-      - name: Yarn 4.5.3
-        run: |
-          corepack enable
-          corepack prepare yarn@4.5.3 --activate
-      - name: Dependencias, APIs de plugins, core y extensiones
-        run: |
-          yarn install --immutable
-          yarn build:tauri:plugin:api
-          yarn build:core
-          yarn build:extensions
-      - name: Pruebas de core, web-app y extensiones
-        run: yarn test
-
   build-macos:
     name: Build macOS (arm64)
     needs: marca

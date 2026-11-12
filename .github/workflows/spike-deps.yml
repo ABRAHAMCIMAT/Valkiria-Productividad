@@ -1,5 +1,6 @@
-# Spike R-01 (ADR-0002): ¿las dependencias nativas críticas instalan con Python 3.15 en cada plataforma?
-# Se ejecuta a mano y cada semana; el resultado alimenta la contingencia 3.14 documentada en el ADR.
+# Spike R-01 y R-11 (ADR-0002): ¿las dependencias nativas críticas instalan con Python 3.15 en cada
+# plataforma sin compilar nada? Se ejecuta a mano y cada semana; el resultado alimenta la contingencia
+# 3.14 documentada en el ADR.
 name: Spike dependencias
 
 on:
@@ -27,45 +28,36 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           python-version: ${{ matrix.python }}
-      - name: Instalar cada dependencia solo con wheels
+      - name: Instalar cada dependencia con wheels para todo lo nativo
+        # tools/deps/solo-wheels.sh resuelve el árbol y exige wheel a cada dependencia, salvo las de
+        # respaldo puro verificado (pyyaml). Las pilas que Valkiria usa de verdad van con sus extras.
         env:
-          PAQUETES: >-
-            onnxruntime lancedb docling pyinstaller fastembed torch pyarrow numpy tokenizers
-            pydantic-core watchfiles presidio-analyzer spacy rapidocr mlflow-skinny langgraph
+          COMUNES: >-
+            lancedb pyinstaller torch pyarrow numpy tokenizers pydantic-core watchfiles
+            presidio-analyzer spacy mlflow-skinny langgraph langchain-text-splitters
+            sentence-transformers
+            docling-slim[convert-core,format-pdf,format-office,format-html,format-markdown,models-local]
+            tesserocr
+            onnxruntime fastembed rapidocr docling langchain-docling
+          MACOS: docling-slim[feat-ocr-mac] ocrmac
         run: |
-          echo "paquete,plataforma,python,resultado,version" > resultado.csv
-          for p in $PAQUETES; do
-            uv venv -q --clear "v-$p"
-            if out=$(uv pip install -q --python "v-$p" --only-binary :all: "$p" 2>&1); then
-              v=$(uv pip show --python "v-$p" "$p" 2>/dev/null | awk '/^Version:/{print $2}')
-              echo "$p,${{ matrix.etiqueta }},${{ matrix.python }},ok,$v" >> resultado.csv
-            else
-              echo "$p,${{ matrix.etiqueta }},${{ matrix.python }},sin-wheel," >> resultado.csv
-              echo "::warning title=$p sin wheel::${{ matrix.etiqueta }} Python ${{ matrix.python }}: $(echo "$out" | tail -1)"
-            fi
-            rm -rf "v-$p"
-          done
-          { echo "### ${{ matrix.etiqueta }} · Python ${{ matrix.python }}"; echo '```'; column -s, -t < resultado.csv; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-      - name: Pila del embedder sin onnxruntime (R-11, ADR-0002)
-        # sentence-transformers sobre torch. Las dependencias nativas deben llegar como wheel;
-        # pyyaml puede instalarse desde el código fuente con su respaldo en Python puro.
-        run: |
-          uv venv -q --clear v-embedder
-          nativas="torch tokenizers safetensors numpy scipy scikit-learn"
-          flags=(); for n in $nativas; do flags+=(--only-binary "$n"); done
-          if out=$(uv pip install -q --python v-embedder "${flags[@]}" sentence-transformers torch 2>&1) \
-            && v-embedder/${{ runner.os == 'Windows' && 'Scripts/python.exe' || 'bin/python' }} -I -c "import torch, sentence_transformers"; then
-            v=$(uv pip show --python v-embedder sentence-transformers 2>/dev/null | awk '/^Version:/{print $2}')
-            echo "embedder-st,${{ matrix.etiqueta }},${{ matrix.python }},ok,$v" >> resultado.csv
-          else
-            echo "embedder-st,${{ matrix.etiqueta }},${{ matrix.python }},sin-wheel," >> resultado.csv
-            echo "::warning title=embedder sin wheels::${{ matrix.etiqueta }} Python ${{ matrix.python }}: $(echo "$out" | tail -1)"
-          fi
-          rm -rf v-embedder
-          echo "embedder-st: $(tail -1 resultado.csv)" >> "$GITHUB_STEP_SUMMARY"
+          echo "paquete,plataforma,python,resultado,version,detalle" > resultado.csv
+          paquetes="$COMUNES"
+          [[ "${{ runner.os }}" == macOS ]] && paquetes="$paquetes $MACOS"
+          # shellcheck disable=SC2086  # la lista se separa por espacios a propósito
+          bash tools/deps/solo-wheels.sh "${{ matrix.python }}" "${{ matrix.etiqueta }}" $paquetes \
+            | tee -a resultado.csv
+          grep -E ',(sin-wheel|sin-resolver),' resultado.csv | while IFS=, read -r p _ _ _ _ causa; do
+            echo "::warning title=$p sin wheels::${{ matrix.etiqueta }} Python ${{ matrix.python }}: $causa"
+          done || true
+          { echo "### ${{ matrix.etiqueta }} · Python ${{ matrix.python }}"; echo '```'; cut -d, -f1-5 resultado.csv | column -s, -t; echo '```'
+            echo 'onnxruntime, fastembed, rapidocr, docling completo y langchain-docling se vigilan, pero Valkiria ya no los necesita (R-11, ADR-0009).'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: spike-${{ matrix.etiqueta }}-py${{ matrix.python }}
