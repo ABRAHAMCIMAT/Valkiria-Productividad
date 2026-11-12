@@ -6,9 +6,16 @@ import { useReleaseNotes } from '../useReleaseNotes'
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
+// Valkiria: el build desactiva el updater de Jan (RN-01.3). Estas pruebas conservan el flujo
+// original con el updater activo; el bloque final comprueba el comportamiento de Valkiria.
+const setUpdaterDisabled = (disabled: boolean) => {
+  ;(globalThis as { AUTO_UPDATER_DISABLED?: boolean }).AUTO_UPDATER_DISABLED = disabled
+}
+
 describe('useReleaseNotes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    setUpdaterDisabled(false)
     // Reset store state to defaults
     useReleaseNotes.setState({
       release: null,
@@ -358,5 +365,27 @@ describe('useReleaseNotes', () => {
       expect(result.current.loading).toBe(false)
       expect(result.current.error).toBe(null)
     })
+  })
+
+  describe('Valkiria · updater de Jan desactivado (RN-01.3)', () => {
+    beforeEach(() => {
+      setUpdaterDisabled(true)
+    })
+
+    it.each([false, true])(
+      'no consulta los releases de Jan en GitHub (includeBeta=%s)',
+      async (includeBeta) => {
+        const { result } = renderHook(() => useReleaseNotes())
+
+        await act(async () => {
+          await result.current.fetchLatestRelease(includeBeta)
+        })
+
+        expect(mockFetch).not.toHaveBeenCalled()
+        expect(result.current.release).toBe(null)
+        expect(result.current.loading).toBe(false)
+        expect(result.current.error).toBe(null)
+      }
+    )
   })
 })

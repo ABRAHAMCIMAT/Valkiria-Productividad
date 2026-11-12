@@ -54,23 +54,23 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it('shows the Jan label on Windows and Linux with window buttons on the right', () => {
+it('shows the Valkiria label on Windows and Linux with window buttons on the right', () => {
   render(<LeftSidebar />)
 
-  expect(screen.getByText('Jan')).toBeInTheDocument()
+  expect(screen.getByText('Valkiria')).toBeInTheDocument()
 })
 
 // The traffic lights own the top-left on macOS (#8943).
-it('hides the Jan label on macOS', () => {
+it('hides the Valkiria label on macOS', () => {
   vi.stubGlobal('IS_MACOS', true)
   render(<LeftSidebar />)
 
-  expect(screen.queryByText('Jan')).not.toBeInTheDocument()
+  expect(screen.queryByText('Valkiria')).not.toBeInTheDocument()
 })
 
-it('hides the Jan label when a Linux desktop puts window buttons on the left', () => {
+it('hides the Valkiria label when a Linux desktop puts window buttons on the left', () => {
   titlebar.left = ['close', 'minimize', 'maximize']
   render(<LeftSidebar />)
 
-  expect(screen.queryByText('Jan')).not.toBeInTheDocument()
+  expect(screen.queryByText('Valkiria')).not.toBeInTheDocument()
 })

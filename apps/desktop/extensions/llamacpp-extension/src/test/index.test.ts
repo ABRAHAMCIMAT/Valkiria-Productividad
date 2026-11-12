@@ -916,6 +916,15 @@ describe('refreshEnginePreset embedding slot reservation', () => {
   })
 })
 
+// Valkiria (RN-01.3): el embedder solo se descarga si la pantalla de primer arranque registró el
+// consentimiento. Estas pruebas simulan ese consentimiento y nada más en los ajustes.
+const withSetupConsent = () =>
+  vi
+    .mocked(getBackendSetting)
+    .mockImplementation(async (key: string) =>
+      key === 'llamacpp-first-run-setup-started' ? 'true' : null
+    )
+
 describe('bootstrapDefaultEmbedder', () => {
   let extension: llamacpp_extension
 
@@ -925,7 +934,7 @@ describe('bootstrapDefaultEmbedder', () => {
   })
 
   it('imports the fallback embedder when none is installed, then marks the bootstrap done', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     // The install is confirmed by re-listing, so the second call has to reflect
     // the import having landed.
     const list = vi
@@ -953,7 +962,7 @@ describe('bootstrapDefaultEmbedder', () => {
   })
 
   it('skips the download when an embedder is already installed but still marks done', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([
       { id: 'custom-embedder', embedding: true },
     ] as never)
@@ -968,6 +977,18 @@ describe('bootstrapDefaultEmbedder', () => {
     )
   })
 
+  it('Valkiria: no descarga nada sin el consentimiento del primer arranque (RN-01.3)', async () => {
+    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    const list = vi.spyOn(extension, 'list')
+    const importSpy = vi.spyOn(extension, 'import')
+
+    await extension['bootstrapDefaultEmbedder']()
+
+    expect(list).not.toHaveBeenCalled()
+    expect(importSpy).not.toHaveBeenCalled()
+    expect(setBackendSetting).not.toHaveBeenCalled()
+  })
+
   it('does nothing when the bootstrap already ran (respects user deletion)', async () => {
     vi.mocked(getBackendSetting).mockResolvedValue('true')
     const list = vi.spyOn(extension, 'list')
@@ -979,7 +1000,7 @@ describe('bootstrapDefaultEmbedder', () => {
   })
 
   it('does not mark done when the download fails, so it retries next launch', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([] as never)
     vi.spyOn(extension, 'import').mockRejectedValue(new Error('offline'))
 
@@ -1168,7 +1189,7 @@ describe('bootstrapDefaultEmbedder failure reporting', () => {
   })
 
   it('records why the bootstrap failed instead of only logging it', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([] as never)
     vi.spyOn(extension, 'import').mockRejectedValue(new Error('offline'))
 
@@ -1178,7 +1199,7 @@ describe('bootstrapDefaultEmbedder failure reporting', () => {
   })
 
   it('leaves no error recorded on success', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([
       { id: 'e', embedding: true },
     ] as never)
@@ -1189,7 +1210,7 @@ describe('bootstrapDefaultEmbedder failure reporting', () => {
   })
 
   it('clears a previous error once a later attempt succeeds', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([] as never)
     vi.spyOn(extension, 'import').mockRejectedValue(new Error('offline'))
     await extension['bootstrapDefaultEmbedder']()
@@ -1208,7 +1229,7 @@ describe('bootstrapDefaultEmbedder failure reporting', () => {
   // marked the one-shot bootstrap done for a model that was never installed, so
   // it never retried and the embedder stayed permanently missing.
   it('does not mark done when the import resolves without installing anything', async () => {
-    vi.mocked(getBackendSetting).mockResolvedValue(null)
+    withSetupConsent()
     vi.spyOn(extension, 'list').mockResolvedValue([] as never)
     const importSpy = vi
       .spyOn(extension, 'import')
