@@ -19,7 +19,6 @@ limpiar() {
 }
 trap limpiar EXIT
 export VIRTUAL_ENV=""
-if command -v sha256sum >/dev/null; then SHA256=(sha256sum); else SHA256=(shasum -a 256); fi
 
 echo "== Paquete $FASE para $SHA en $PKG"
 mkdir -p "$PKG"/{L1-alcance,L4-desarrollo,L5-evaluacion,L6-seguridad,L9-mejora}
@@ -107,8 +106,6 @@ print(f"Quality Gate de Sonar: {gate}")
 sys.exit(0 if gate == "OK" else 1)
 PY
 
-(cd "$PKG" && find . -type f ! -name manifest.sha256 -print0 | LC_ALL=C sort -z \
-   | xargs -0 "${SHA256[@]}" | sed 's#  \./#  #' > manifest.sha256)
-echo "manifest.sha256: $(wc -l < "$PKG/manifest.sha256") archivos"
+python3 -I tools/evidencias/manifiesto.py generar "$PKG"
 [[ $faltan -eq 0 && -z ${TRAZA_FALLO:-} ]] || { echo "Paquete $FASE INCOMPLETO"; exit 1; }
 echo "Paquete $FASE completo en $PKG"

@@ -66,6 +66,39 @@ jobs:
           retention-days: 90
           if-no-files-found: warn
 
+  pruebas-web:
+    # Suites de vitest de @janhq/core, web-app y extensiones, adaptadas a la marca (anexo §10 de F0).
+    # Corre en cada PR para poder ser un check requerido del ruleset de main. Linux para no gastar
+    # minutos de macOS; TZ=UTC porque formatDate.test.ts depende de la zona horaria.
+    name: Pruebas de la app (vitest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TZ: UTC
+      NODE_OPTIONS: "--max-old-space-size=4096"
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "20"
+      - name: Yarn 4.5.3
+        run: |
+          corepack enable
+          corepack prepare yarn@4.5.3 --activate
+      - name: Dependencias, APIs de plugins, core y extensiones
+        run: |
+          yarn install --immutable
+          yarn build:tauri:plugin:api
+          yarn build:core
+          yarn build:extensions
+      - name: Pruebas de core, web-app y extensiones
+        run: yarn test
+
   evidencia-mlflow:
     name: Evidencia MLflow (HU-03)
     runs-on: ubuntu-24.04
@@ -139,6 +172,8 @@ jobs:
           python3 tools/security/politica.py trivyignore > reports/.trivyignore
 
       # Cada escáner corre aunque otro falle; el paso final aplica la política con sus resultados.
+      - name: Integridad de los paquetes de evidencias (manifest.sha256)
+        run: python3 -I tools/evidencias/manifiesto.py verificar evidencias/F*/
       - name: Secretos (Gitleaks)
         id: gitleaks
         continue-on-error: true
