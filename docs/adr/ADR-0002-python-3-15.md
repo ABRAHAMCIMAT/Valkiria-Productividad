@@ -36,3 +36,24 @@ Consulta a PyPI de las últimas versiones; la verificación real con instalació
    - El chip M4 es el hardware mínimo soportado y probado. No hay bloqueo técnico por chip: en M1, M2 o M3 con macOS 27.2 la app abre, pero sin soporte.
    - CI deja de usar `macos-15-intel`. Como los runners de GitHub no cumplen el mínimo, `desktop.yml` compila el `.app` y verifica su arquitectura y su `LSMinimumSystemVersion`, y la prueba de humo de macOS corre en un Mac M4 con `tools/desktop/humo-mac-local.sh`.
    - Se retiran las columnas de macOS x64 de la tabla anterior de las decisiones futuras.
+
+## Revisión 2026-11-12 · R-11 (onnxruntime)
+
+onnxruntime 1.31.1, su última versión, sigue sin *wheels* `cp315`. Se probó la alternativa que proponía este ADR en un Mac M4 con macOS 27.2 y Python 3.15:
+
+| Paquete | Versión | *Wheel* para 3.15 |
+|---|---|---|
+| torch | 2.15.0 | `cp315` en macOS arm64 y Windows x64 |
+| tokenizers, safetensors | 0.23.3, 0.8.0 | `abi3` |
+| sentence-transformers, transformers | 6.3.0, 5.22.2 | Python puro |
+| pyyaml | 6.0.3 | Sin *wheel* `cp315`: se instala desde el código fuente con su respaldo en Python puro, sin compilador |
+
+`multilingual-e5-small` cargó sobre MPS y generó *embeddings* de 384 dimensiones; en una consulta de prueba, el pasaje relevante obtuvo una similitud de 0.896 y el irrelevante, de 0.749.
+
+**Decisión: el *embedder* de F3 es `sentence-transformers` sobre torch, en lugar de fastembed sobre onnxruntime.** Los modelos del catálogo no cambian (e5-small y bge-m3, ADR-0011), ni se necesita la contingencia 3.14 para F3.
+
+**Consecuencias:**
+- R-11 queda **mitigado**. Solo depende de onnxruntime el respaldo de OCR de F8 (RapidOCR), ya que la vía principal es el VLM sobre llama.cpp. Se revisa al iniciar F8: si para entonces no hay *wheels* `cp315`, se usa solo el VLM o la contingencia 3.14 acotada a ese respaldo.
+- torch pesa más que onnxruntime en el *sidecar* de PyInstaller (F2). Se mide el tamaño del instalador en F3 y, si hace falta, se usa la variante de torch solo CPU en Windows.
+- EasyOCR no sirve como respaldo en 3.15: solo resuelve versiones antiguas, compiladas contra numpy 1.
+- `spike-deps.yml` verifica cada semana la pila del *embedder* en Windows y macOS, exigiendo *wheels* para las dependencias nativas.
