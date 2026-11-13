@@ -30,9 +30,12 @@ on:
 permissions:
   contents: read
 
+# En los PR una corrida nueva reemplaza a la anterior. En main no se cancela nada: el push de una
+# fusión y la corrida programada comparten grupo, y la programada cancelaba la del push (2026-11-13,
+# PR #19), dejando el commit fusionado sin su build. Ahí esperan en cola.
 concurrency:
   group: desktop-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4196"
