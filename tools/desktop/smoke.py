@@ -532,15 +532,16 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
         return _guardar(r, salida)
     pids_vistos: set[int] = set()
     # Perfil limpio: en un Mac del equipo la app abriría los chats y ajustes reales de la persona,
-    # que no deben llegar a la evidencia, y no sería un primer arranque. Con HOME temporal, los
-    # datos de la app (Application Support, Caches) empiezan vacíos. WebKit no usa HOME para su
-    # almacén (~/Library/WebKit/<id>), así que el localStorage del WebView sigue siendo el real.
+    # que no deben llegar a la evidencia, y no sería un primer arranque. HOME aísla los datos de la
+    # app (Application Support, Caches); CFFIXED_USER_HOME cambia NSHomeDirectory(), que es lo que
+    # usa WebKit para su almacén (~/Library/WebKit/<id>, con el localStorage del WebView).
+    # Verificado el 2026-11-13: con ambas variables no se toca ningún archivo del perfil real.
     with (
         tempfile.TemporaryDirectory(prefix="valkiria-perfil-") as perfil,
         proxy_de_registro() as (entorno, intentos),
         registro_red_macos(ejecutable.name, salida) as archivo,
     ):
-        r.perfil = "HOME temporal vacío; el almacén de WebKit (~/Library/WebKit) es el del usuario"
+        r.perfil = "HOME y CFFIXED_USER_HOME temporales: datos de la app y de WebKit aislados"
         control = conexion_de_control()
         _observar(
             r,
@@ -551,7 +552,7 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
             conexiones,
             captura,
             pids_vistos,
-            entorno | {"HOME": perfil},
+            entorno | {"HOME": perfil, "CFFIXED_USER_HOME": perfil},
         )
     _anotar_intentos(r, intentos)
     with archivo.open(encoding="utf-8") as f:

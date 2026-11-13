@@ -11,9 +11,10 @@ on:
 permissions:
   contents: read
 
+# Solo en los PR una corrida nueva cancela la anterior; en main cada commit conserva su verificación.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   core:
