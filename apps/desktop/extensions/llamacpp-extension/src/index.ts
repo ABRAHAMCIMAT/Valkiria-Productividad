@@ -2969,6 +2969,15 @@ export default class llamacpp_extension extends AIEngine implements EmbeddingEng
     let sInfo = await this.findSessionByModel(targetModelId)
     if (!sInfo) {
       if (targetModelId === FALLBACK_EMBEDDING_MODEL_ID && !hasMini) {
+        // Valkiria (RN-01.3): este era el otro camino de la descarga sin consentimiento. Lo
+        // recorre cualquier llamada a embed(), getEmbeddingContextSize() o verifyEmbeddingModel()
+        // antes de que el usuario empiece la configuración inicial.
+        if (!(await this.hasSetupConsent())) {
+          throw new Error(
+            `El modelo de embeddings "${FALLBACK_EMBEDDING_MODEL_ID}" no está instalado y no se ` +
+              'descarga sin el consentimiento de la configuración inicial'
+          )
+        }
         await this.import(FALLBACK_EMBEDDING_MODEL_ID, {
           modelPath: FALLBACK_EMBEDDING_MODEL_URL,
         })

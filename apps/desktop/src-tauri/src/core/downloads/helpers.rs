@@ -22,8 +22,12 @@ use url::Url;
 const JAN_MIRROR_PREFIX_STABLE: &str = "https://apps.jan.ai/";
 const JAN_MIRROR_PREFIX_NIGHTLY: &str = "https://apps-nightly.jan.ai/";
 
-/// Domains that should use mirror download with fallback
-const MIRROR_DOMAINS: &[&str] = &["huggingface.co"];
+/// Domains that should use mirror download with fallback.
+///
+/// Valkiria: vacío. Jan desviaba toda descarga de Hugging Face a su espejo (apps.jan.ai), con una
+/// firma HMAC propia, y solo si fallaba iba a la URL original. Valkiria no se conecta a servicios de
+/// Jan (RN-01.3): las descargas, que el usuario autoriza, van directo a la URL original.
+const MIRROR_DOMAINS: &[&str] = &[];
 
 /// Check if this is a nightly build based on package name
 fn is_nightly_build() -> bool {

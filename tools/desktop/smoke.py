@@ -18,6 +18,13 @@ anota cada conexión al iniciarse, con la interfaz por la que sale, incluidas la
 las abre desde ``com.apple.WebKit.Networking``, que no es hijo de la app y no aparece en ``lsof``,
 pero anota el pid del cliente. Antes de abrir la app se hace una conexión de control a loopback con
 ``nscurl``; si el registro no la ve, la prueba falla porque CA-01.3 no sería verificable.
+
+En macOS y Windows la app se abre además con ``HTTPS_PROXY``, ``HTTP_PROXY`` y ``ALL_PROXY``
+apuntando a un proxy local que anota cada petición y la rechaza (``NO_PROXY`` excluye loopback).
+Los clientes que respetan esas variables (reqwest en Rust, Node, Python) quedan registrados
+aunque la conexión dure milisegundos, y nada sale a internet. Así se encontró, el 2026-11-12, la
+descarga del embedder de respaldo desde Hugging Face y el espejo de Jan al primer arranque, que el
+muestreo no veía.
 """
 
 from __future__ import annotations
@@ -32,6 +39,7 @@ import os
 import platform
 import plistlib
 import re
+import socketserver
 
 # Solo herramientas del SO con argumentos controlados.
 import subprocess  # nosec B404
@@ -61,6 +69,8 @@ class Resultado:
     segundos: int = 0
     captura: str = ""
     registro_red: dict[str, object] = field(default_factory=dict)
+    perfil: str = ""
+    intentos_por_proxy: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -204,6 +214,37 @@ def leer_eventos(lineas: Iterable[str]) -> Iterator[dict[str, object]]:
 class _Silencioso(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:  # noqa: A002
         return
+
+
+class _ProxyDeRegistro(socketserver.StreamRequestHandler):
+    """Anota la primera línea de cada petición (``CONNECT host:443``, ``GET http://...``) y la
+    rechaza con 403, para que nada salga a internet."""
+
+    def handle(self) -> None:
+        linea = self.rfile.readline(4096).decode("latin-1", errors="replace").strip()
+        if linea:
+            self.server.intentos.append(linea)  # type: ignore[attr-defined]
+        self.wfile.write(
+            b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+
+
+@contextlib.contextmanager
+def proxy_de_registro() -> Iterator[tuple[dict[str, str], list[str]]]:
+    """Proxy local en un puerto libre; da las variables de entorno y la lista de intentos."""
+    with socketserver.ThreadingTCPServer(("127.0.0.1", 0), _ProxyDeRegistro) as servidor:
+        intentos: list[str] = []
+        servidor.intentos = intentos  # type: ignore[attr-defined]
+        servidor.daemon_threads = True
+        threading.Thread(target=servidor.serve_forever, daemon=True).start()
+        url = f"http://127.0.0.1:{servidor.server_address[1]}"
+        entorno = dict.fromkeys(("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY"), url)
+        entorno |= {v.lower(): url for v in entorno}
+        entorno |= {"NO_PROXY": "localhost,127.0.0.1,::1", "no_proxy": "localhost,127.0.0.1,::1"}
+        try:
+            yield entorno, intentos
+        finally:
+            servidor.shutdown()
 
 
 def conexion_de_control() -> int:
@@ -483,12 +524,36 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
     r.errores += validar_identidad(r.identidad, so)
 
     if so != "macos":
-        _observar(r, ejecutable, segundos, salida, descendientes, conexiones, captura, set())
+        with proxy_de_registro() as (entorno, intentos):
+            _observar(
+                r, ejecutable, segundos, salida, descendientes, conexiones, captura, set(), entorno
+            )
+        _anotar_intentos(r, intentos)
         return _guardar(r, salida)
     pids_vistos: set[int] = set()
-    with registro_red_macos(ejecutable.name, salida) as archivo:
+    # Perfil limpio: en un Mac del equipo la app abriría los chats y ajustes reales de la persona,
+    # que no deben llegar a la evidencia, y no sería un primer arranque. Con HOME temporal, los
+    # datos de la app (Application Support, Caches) empiezan vacíos. WebKit no usa HOME para su
+    # almacén (~/Library/WebKit/<id>), así que el localStorage del WebView sigue siendo el real.
+    with (
+        tempfile.TemporaryDirectory(prefix="valkiria-perfil-") as perfil,
+        proxy_de_registro() as (entorno, intentos),
+        registro_red_macos(ejecutable.name, salida) as archivo,
+    ):
+        r.perfil = "HOME temporal vacío; el almacén de WebKit (~/Library/WebKit) es el del usuario"
         control = conexion_de_control()
-        _observar(r, ejecutable, segundos, salida, descendientes, conexiones, captura, pids_vistos)
+        _observar(
+            r,
+            ejecutable,
+            segundos,
+            salida,
+            descendientes,
+            conexiones,
+            captura,
+            pids_vistos,
+            entorno | {"HOME": perfil},
+        )
+    _anotar_intentos(r, intentos)
     with archivo.open(encoding="utf-8") as f:
         eventos = list(leer_eventos(f))
     de_control = conexiones_registradas(eventos, {control})
@@ -516,6 +581,14 @@ def ejecutar(app: Path, segundos: int, salida: Path) -> Resultado:
     return _guardar(r, salida)
 
 
+def _anotar_intentos(r: Resultado, intentos: list[str]) -> None:
+    """Cada petición que llegó al proxy es un intento de conexión externa (CA-01.3)."""
+    r.intentos_por_proxy = list(intentos)
+    for intento in dict.fromkeys(intentos):
+        print(f"::error title=CA-01.3::intento de conexión saliente (proxy): {intento}")
+        r.conexiones_externas.append(f"proxy: {intento}")
+
+
 def _guardar(r: Resultado, salida: Path) -> Resultado:
     (salida / f"smoke-{r.so}.json").write_text(
         json.dumps(asdict(r) | {"ok": r.ok}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
@@ -532,11 +605,15 @@ def _observar(
     conexiones: Callable[[list[int]], list[tuple[str, str]]],
     captura: Callable[[Path, set[int]], str],
     pids_vistos: set[int],
+    entorno: dict[str, str] | None = None,
 ) -> None:
     """Abre la app, muestrea sus sockets cada 2 s y toma la captura a los 20 s."""
     # Herramienta de CI: lanza la app recién instalada, validada por ejecutable_de().
     proceso = subprocess.Popen(  # noqa: S603  # nosec B603  # NOSONAR
-        [str(ejecutable)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        [str(ejecutable)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        env={**os.environ, **entorno} if entorno else None,
     )
     vistas: set[str] = set()
     inicio = time.monotonic()

@@ -1,6 +1,6 @@
 {
   "so": "macos-arm64",
-  "app": "/var/folders/2b/0m72jxx156b3jsvzg0jcg8bh0000gn/T/tmp.aH3NOSLdKY/app/Valkiria Productividad.app",
+  "app": "/var/folders/2b/0m72jxx156b3jsvzg0jcg8bh0000gn/T/tmp.Smg5C6c24p/app/Valkiria Productividad.app",
   "identidad": {
     "nombre": "Valkiria Productividad",
     "nombre_visible": "Valkiria Productividad",
@@ -15,12 +15,14 @@
   "conexiones_loopback": 0,
   "viva_al_final": true,
   "segundos": 300,
-  "captura": "sin captura: screencapture no generó la imagen (¿falta el permiso de Grabación de pantalla para la terminal?)",
+  "captura": "ventana 224 de la app",
   "registro_red": {
     "metodo": "log stream (Network.framework), incluye com.apple.WebKit.Networking",
     "control_loopback_visto": true,
-    "eventos": 5482,
+    "eventos": 4382,
     "conexiones_de_la_app": []
   },
+  "perfil": "HOME temporal vacío; el almacén de WebKit (~/Library/WebKit) es el del usuario",
+  "intentos_por_proxy": [],
   "ok": true
 }
