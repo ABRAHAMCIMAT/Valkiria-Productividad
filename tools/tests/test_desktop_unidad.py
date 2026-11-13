@@ -223,7 +223,9 @@ def test_ca_01_3_macos_sin_conexiones_externas(
     assert home != smoke.os.environ.get("HOME")
     assert "valkiria-perfil-" in home
     assert not Path(home).exists()  # se borra al terminar
-    assert "HOME temporal" in r.perfil
+    # WebKit usa NSHomeDirectory(): sin CFFIXED_USER_HOME escribiría en el perfil real.
+    assert macos_simulado["entorno"]["CFFIXED_USER_HOME"] == home
+    assert "WebKit aislados" in r.perfil
     assert r.registro_red["control_loopback_visto"] is True
     (c,) = r.registro_red["conexiones_de_la_app"]  # type: ignore[misc]
     assert c["interfaces"] == ["lo0"]

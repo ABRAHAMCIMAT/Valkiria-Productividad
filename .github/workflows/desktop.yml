@@ -55,7 +55,7 @@ jobs:
     name: Build macOS (arm64)
     needs: marca
     runs-on: macos-15
-    timeout-minutes: 90
+    timeout-minutes: 120
     defaults:
       run:
         working-directory: apps/desktop
@@ -104,6 +104,12 @@ jobs:
           path: ${{ runner.temp }}/Valkiria-Productividad-macos.zip
           if-no-files-found: error
           retention-days: 30
+      # Pruebas de Rust del módulo de descargas: cubren que ninguna descarga se desvíe al espejo de
+      # Jan (anexo §12, RN-01.3). Van después de subir el artefacto para que esté disponible aunque
+      # fallen. Compilan en modo prueba, aparte del build de release.
+      - name: Pruebas de Rust · descargas (sin espejo de Jan)
+        working-directory: apps/desktop/src-tauri
+        run: cargo test --locked --lib core::downloads
 
   windows:
     name: Build y humo Windows x64
