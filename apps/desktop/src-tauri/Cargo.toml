@@ -1,5 +1,5 @@
 [package]
-name = "Jan"
+name = "valkiria-productividad"
 version = "0.8.5"
 description = "Valkiria Productividad: asistente de IA local de VALTRE."
 authors = ["VALTRE"]
@@ -28,7 +28,8 @@ required-features = ["desktop"]
 # so a `jan` target would make the desktop bundler try to copy a binary the
 # desktop build never compiles. It is deliberately NOT a workspace member -- the
 # desktop build renames this package (`ctoml package.name "Jan-<channel>"`) and a
-# member would then fail to resolve its `package = "Jan"` dependency.
+# member would then fail to resolve its `package = "Jan"` dependency. Valkiria: el paquete se
+# llama `valkiria-productividad` (antes `Jan`) y no usa canales con ctoml.
 
 [features]
 default = [

@@ -13,9 +13,9 @@ use super::helpers::copy_dir_recursive;
 #[cfg(not(feature = "cli"))]
 use crate::core::state::AppState;
 
-/// Canonical Jan app support directory (`%APPDATA%/Jan` on Windows).
+/// Canonical app support directory (`%APPDATA%/Valkiria Productividad` on Windows).
 fn resolve_human_readable_app_data_dir() -> Option<PathBuf> {
-    paths::data_dir().map(|d| d.join(env!("CARGO_PKG_NAME")))
+    paths::data_dir().map(|d| d.join(paths::APP_DIR_NAME))
 }
 
 /// Tauri bundle-id app support directory (e.g. `%APPDATA%/jan.ai.app` on Windows).
@@ -82,7 +82,6 @@ fn legacy_app_config_candidate_paths(_app_data_dir: &Path) -> Vec<PathBuf> {
 
 #[cfg(not(feature = "cli"))]
 fn app_data_dir_with_fallback<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> PathBuf {
-    let package_name = env!("CARGO_PKG_NAME");
     paths::data_dir_for(app_handle)
         .unwrap_or_else(|err| {
             log::error!("Failed to get data directory: {err}. Using home directory instead.");
@@ -96,7 +95,7 @@ fn app_data_dir_with_fallback<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> P
 
             PathBuf::from(home_dir)
         })
-        .join(package_name)
+        .join(paths::APP_DIR_NAME)
 }
 
 /// Resolve the Jan config file path without an AppHandle (for CLI use).
@@ -104,11 +103,10 @@ fn app_data_dir_with_fallback<R: Runtime>(app_handle: &tauri::AppHandle<R>) -> P
 /// with fallback recovery from bundle-id location when needed.
 pub fn resolve_config_file_path() -> PathBuf {
     let app_data = resolve_human_readable_app_data_dir().unwrap_or_else(|| {
-        let package_name = env!("CARGO_PKG_NAME");
         let home = std::env::var("HOME")
             .or_else(|_| std::env::var("USERPROFILE"))
             .unwrap_or_default();
-        PathBuf::from(home).join(package_name)
+        PathBuf::from(home).join(paths::APP_DIR_NAME)
     });
 
     if let Err(err) = migrate_legacy_app_configuration(&app_data) {
@@ -163,8 +161,8 @@ pub fn resolve_jan_data_folder() -> PathBuf {
         }
     }
 
-    // Default: data_dir/Jan/data  (mirrors default_data_folder_path)
-    let app_name = std::env::var("APP_NAME").unwrap_or_else(|_| "Jan".to_string());
+    // Default: data_dir/Valkiria Productividad/data  (mirrors default_data_folder_path)
+    let app_name = std::env::var("APP_NAME").unwrap_or_else(|_| paths::APP_DIR_NAME.to_string());
     if let Some(data_dir) = paths::data_dir() {
         return data_dir.join(&app_name).join("data");
     }
@@ -592,6 +590,17 @@ mod tests {
         assert_eq!(
             identifier, TAURI_BUNDLE_IDENTIFIER,
             "TAURI_BUNDLE_IDENTIFIER must stay synced with tauri.conf.json"
+        );
+
+        // Valkiria: la carpeta de configuración y la de datos usan el mismo nombre.
+        let product_name = json
+            .get("productName")
+            .and_then(|v| v.as_str())
+            .expect("productName field exists");
+        assert_eq!(
+            product_name,
+            paths::APP_DIR_NAME,
+            "APP_DIR_NAME must stay synced with productName in tauri.conf.json"
         );
     }
 }
