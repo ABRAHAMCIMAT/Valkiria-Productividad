@@ -185,3 +185,24 @@ Con este anexo F0 queda **sin excepciones de seguridad vigentes** (`security/exc
 - CI no corre `cargo test`, así que el cambio del espejo no tiene prueba automática en CI.
 
 Los gates de la sección 3 conservan los valores del commit verificado `cf0cf48`; este anexo corrige el de conexiones salientes. `manifest.sha256` se regeneró con `manifiesto.py`.
+
+## 13. Anexo: restos de la marca Jan e historial firmado (2026-11-17)
+
+**Carpeta de la app.** Valkiria compartía configuración y datos con la app Jan instalada en el mismo equipo. Había tres causas:
+
+| Causa | Efecto | Corrección |
+|---|---|---|
+| La carpeta de configuración usaba el nombre del crate (`Jan`) | `~/Library/Application Support/Jan/settings.json`, el mismo archivo que usa Jan. En el Mac M4 de pruebas apuntaba a `Jan/data`, la carpeta de datos de Jan | Constante `APP_DIR_NAME = "Valkiria Productividad"` en `core/app/paths.rs` para configuración, datos y valores por defecto. Una prueba exige que coincida con `productName` |
+| El plugin de base vectorial tenía `"Jan"` escrito a mano y el valor por defecto de la carpeta de datos también | Las colecciones RAG y la memoria del agente iban a `Jan/data/db` | `base_dir_in` recibe la carpeta de la app; prueba nueva que exige `Valkiria Productividad/data/db` |
+| `TAURI_BUNDLE_IDENTIFIER` seguía en `jan.ai.app` | La recuperación de configuración leía el `settings.json` de la app Jan y podía adoptar su carpeta de datos. En el Mac de pruebas apuntaba a la de otra app | `com.valtre.valkiria`. La prueba existente que lo compara con `tauri.conf.json` fallaba sin que se notara, porque CI no corría esas pruebas |
+
+- **Crate de Rust:** se llama `valkiria-productividad` (antes `Jan`). Los dos `Cargo.lock` se actualizaron sin otros cambios: mismo contenido, salvo el nombre y la posición del bloque.
+- **CI:** corre `cargo test --lib -- core::downloads core::app`.
+- **Sin migración automática, a propósito.** En un equipo con Jan instalada no se puede distinguir qué datos de `Jan/` son de Valkiria. Las instalaciones internas 0.0.x empiezan con la carpeta nueva. El binario interno se sigue llamando `Jan-Desktop`; la app se instala como «Valkiria Productividad» porque `tauri.conf.json` lo renombra.
+
+**Commits sin firma.** 42 commits de `main` no tienen firma: todos son anteriores a la regla del anexo §7 y ancestros del commit de cierre `f17c804`. Reescribir el historial de `main` no es aceptable. En su lugar:
+- La lista exacta queda en `L6-seguridad/commits-sin-firma.tsv` (SHA-256 `7299965d…7dec30`).
+- El **tag firmado `fase-0-cierre-firmado`** apunta a `f17c804`. Al firmar ese commit se da fe de todo su historial, porque cada commit incluye el hash de su padre. GitHub lo muestra como verificado. Se comprueba con `git verify-tag fase-0-cierre-firmado` y con `git merge-base --is-ancestor <commit> fase-0-cierre-firmado`.
+- Desde el anexo §7, el *ruleset* exige firma en todo commit nuevo.
+
+`fase-0-cierre-firmado` no reemplaza a `fase-0-cierre-v2`, que se crea con las cuatro aprobaciones de la sección 5. `manifest.sha256` se regeneró con `manifiesto.py`.

@@ -1,0 +1,43 @@
+commit	fecha_utc	asunto
+c2b5a1a207fd97d343950703fc44dc2dded15b28	2026-11-10T23:33:55Z	Commit inicial
+54f71ec05417b2f9cfcd3be387ee0b69ad4a254b	2026-11-10T23:36:18Z	Agregar ingeniería inversa, arquitectura y plan incremental
+b75180a99aa410ad08901ed19785bc140658de4a	2026-11-11T00:05:36Z	docs: arquitectura v2 open source, LLMOps, seguridad y HU con INVEST
+9a39ebb43f38cc436d04884f3cb7b10a40a863be	2026-11-11T00:53:29Z	chore: configurar Sonar (Cloud en CI + Community local)
+fca28fc94125deac0e1d7602c17ff2a841266fd4	2026-11-11T03:02:11Z	feat(ci): esqueleto de Core y pipeline seguro en macOS y Windows
+3b515bf88062c02e4d3fb5989db9bd3061c64867	2026-11-11T03:09:51Z	fix(ci): usar macos-15 para arm64; GitHub ya no admite macos-14
+845ec1c8a3d41e63c1fd31e67a7fa9c155e84873	2026-11-11T03:09:54Z	feat(llmops): registro de experimentos y trazas con MLflow 3
+f28153f6f1e1697f8aef10838c388c17b46a8ae4	2026-11-11T03:13:11Z	chore(desktop): script de importación y sincronización del fork de Jan
+8ee2ff6bbe6b29293cad3199a3772c27c446859b	2026-11-11T03:15:25Z	chore(desktop): importar Jan v0.8.8 (646ab625b9771d0dd6a60f334d41277ef01f1457)
+1f29c98f6d6f0ca4c553deb7bd21ce53007a5620	2026-11-11T03:15:25Z	Squashed 'apps/desktop/' content from commit fb4ab84
+21e3249b6d4e2ab771f67ccd8728f6b4f285abe6	2026-11-11T03:34:24Z	feat(desktop): marca Valkiria sobre Jan v0.8.8, sin nube por defecto
+cb0844c7156aad3e21c47484034c9837e50fa66c	2026-11-11T03:35:28Z	ci(sonar): listar vulnerabilidades y hotspots pendientes cuando falla el Quality Gate
+899139298913c289efa60b07fe2479dda858bd43	2026-11-11T03:37:44Z	ci(sonar): formatear hallazgos con un script probado
+915e0992bf1a1c527171d9c1cb998adbd3230504	2026-11-11T03:40:29Z	fix(llmops): el comando de MLflow solo usa valores de una lista fija
+c3415bbaf007cf551a5b11fe2038c7570d3da8ce	2026-11-11T03:43:22Z	fix(desktop): la prueba de humo valida la ruta y no interpola rutas en PowerShell
+2e581b267d83b0b9453a1d414091c77ad3047103	2026-11-11T03:46:43Z	feat(evidencias): paquete de cierre de fase, trazabilidad y alerta de ncloc
+7575fba917438e55de2c5b94e69b1747ea6d5442	2026-11-11T04:00:20Z	docs(evidencias): borrador del acta de F0 y evidencia de las demostraciones #9 y #10
+78686ddde58ba48266614413e9c2eff69ea1ac50	2026-11-11T04:00:20Z	fix(ci): localizar el zip de la app dentro del artefacto de macOS
+74e29ba9e9d2e2c9b88a5cabb61c82f7eb2bbc63	2026-11-11T04:14:28Z	fix(desktop): sin consulta de releases de Jan al arrancar y WebView2 sin red de fondo
+c071971253a5eedd925d92e0f678493d0455151c	2026-11-11T04:14:35Z	Merge HU-03 en HU-01: corrección de Sonar en llmops y diagnóstico del Quality Gate
+c0716c3dc1238354f7a59dfaceb8af3ebe1109ec	2026-11-11T04:14:42Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+64f10853b89d17d19e70af95d6c27b7f13b12c88	2026-11-11T04:55:30Z	fix(desktop): identificador com.valtre.valkiria en el Info.plist de macOS y captura DNS en la prueba de humo
+724225b07927542e2654974ab03bf759c1154ab0	2026-11-11T04:56:27Z	fix(desktop): el embedder de Jan solo se descarga con consentimiento
+475f44fc75297c342931928b7b5c8cf328543e1c	2026-11-11T04:56:34Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+958153c4756ae996ce034ebf8daaf2084f355e0f	2026-11-11T04:57:08Z	fix(ci): Gitleaks revisa solo la historia del commit bajo prueba
+c27a4e91be3d8ae7da2ca2534abd549bd1364141	2026-11-11T04:57:10Z	Merge branch 'feat/HU-02-pipeline-seguro' into feat/HU-03-trazabilidad-mlflow
+26ea0e675789d7fa1d10f27fce4121c2f8ffcf56	2026-11-11T05:34:38Z	Merge branch 'feat/HU-03-trazabilidad-mlflow' into feat/HU-01-marca-valkiria
+78a04a196b8faf294b9ee380680a9957c4e4564c	2026-11-11T05:34:40Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+fa85e44469a388bbae2dceb76aeaba2c9488d53d	2026-11-11T05:38:38Z	fix(desktop): confinar las escrituras de rebrand.py y smoke.py (path traversal)
+ba440d86cb70e3d208d77bec9a6a47fc023fa6a2	2026-11-11T05:38:40Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+a9d4637f896f01e6c8f96632161fd6e49cee458a	2026-11-11T05:41:09Z	fix(desktop): validar rutas con realpath + commonpath (patrón reconocido por Sonar)
+b2d5d14a54d84a995e785ca99c9145392289e7e9	2026-11-11T05:41:15Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+8f378f5fec23a731906aa66626358389c4f11c5d	2026-11-11T05:41:43Z	fix(evidencias): confinar rutas de trazabilidad.py y explicitar el uso de uv en armar.sh
+4a8bafb2a2778c9fc9a97a77260f86ed361b4aa0	2026-11-11T05:44:00Z	chore(sonar): excluir solo en tools/ las reglas de path traversal por argumentos de CLI
+0320ce5aef720ef457152b4fe905f58c78659dab	2026-11-11T05:44:03Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+d4c004915819463c82645dcbec3f63d7f5fa9747	2026-11-11T05:49:30Z	fix(desktop): comparar rutas en unidades distintas de Windows sin error
+c980bc96da96edf8f999eccc82725c8871f73551	2026-11-11T05:49:44Z	Merge branch 'feat/HU-01-marca-valkiria' into feat/HU-29-cierre-F0
+d7f8655ac946706342ec482ebc2702df85831227	2026-11-11T05:50:22Z	fix(evidencias): leer JUnit con defusedxml y comparar rutas entre unidades en Windows
+d978cb372f5024461bdc9b5986397905c3ed3111	2026-11-11T11:01:05Z	docs(F0): repositorio público (D1) y protección de main en el acta, el plan y el README
+cf0cf48de32cfa7e2a4846a4bf909cadee542114	2026-11-11T12:20:31Z	fix(evidencias): primera ejecución real del paquete de F0
+bafea1d986bdbda69256115252a481b6b073d2c0	2026-11-11T12:55:11Z	docs(F0): paquete de evidencias de cierre y acta completada
+308ab86e41d6d33f444d72489276acc04047fb08	2026-11-11T12:55:33Z	fix(evidencias): guardar el paquete byte a byte (-text) para que coincida con su manifiesto
