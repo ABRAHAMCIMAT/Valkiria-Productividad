@@ -17,8 +17,10 @@ on:
   push:
     branches: [main]
     paths: ["apps/desktop/**", "tools/desktop/**", ".github/workflows/desktop.yml"]
+  # Sin "opened": al abrir un PR con la etiqueta, GitHub manda opened y labeled, y la segunda corrida
+  # cancelaba la primera (check "cancelled" en rojo). labeled basta para el primer build.
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [synchronize, reopened, labeled]
   schedule:
     - cron: "0 5 * * *"
   workflow_dispatch:
@@ -44,7 +46,11 @@ env:
 jobs:
   marca:
     name: Marca aplicada
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build-desktop')
+    # En un PR: solo con la etiqueta build-desktop, y si el evento es labeled, solo por esa etiqueta.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'build-desktop') &&
+       (github.event.action != 'labeled' || github.event.label.name == 'build-desktop'))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
