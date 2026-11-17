@@ -69,6 +69,16 @@ fn env_data_dir() -> Option<PathBuf> {
     absolute_override(std::env::var_os(DATA_ROOT_ENV))
 }
 
+/// Valkiria: nombre de la carpeta de la app dentro de la raíz de datos del SO
+/// (`~/Library/Application Support/Valkiria Productividad` en macOS, `%APPDATA%\Valkiria
+/// Productividad` en Windows). Ahí viven `settings.json`, `data/` y la base vectorial.
+///
+/// Jan usaba el nombre del crate (`Jan`) para la configuración y un `"Jan"` escrito a mano para el
+/// valor por defecto y la base vectorial, así que Valkiria compartía configuración, chats y
+/// colecciones con la app Jan instalada en el mismo equipo. Debe coincidir con `productName` de
+/// `tauri.conf.json`, que es lo que usa `default_data_folder_path` (prueba en `commands.rs`).
+pub const APP_DIR_NAME: &str = "Valkiria Productividad";
+
 /// The OS app-data root: `$JAN_DATA_ROOT` when set, else `dirs::data_dir()`.
 ///
 /// Use in place of `dirs::data_dir()`.
@@ -113,12 +123,23 @@ pub fn app_data_dir_for<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<PathBuf
 /// command surface, and per call for the agent memory store.
 pub fn vector_db_dir() -> PathBuf {
     let root = data_dir().unwrap_or_else(|| PathBuf::from("."));
-    tauri_plugin_vector_db::db::base_dir_in(&root)
+    tauri_plugin_vector_db::db::base_dir_in(&root.join(APP_DIR_NAME))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Valkiria: la base vectorial vive en la carpeta de la app, no en la de Jan (anexo §13).
+    #[test]
+    fn vector_db_dir_vive_en_la_carpeta_de_valkiria() {
+        let dir = vector_db_dir();
+        assert!(
+            dir.ends_with(PathBuf::from(APP_DIR_NAME).join("data").join("db")),
+            "{dir:?}"
+        );
+        assert!(!dir.ends_with(PathBuf::from("Jan").join("data").join("db")), "{dir:?}");
+    }
 
     // An absolute path spelled the way the host spells them, so the rule under
     // test is exercised on every platform rather than only on one.

@@ -107,12 +107,12 @@ jobs:
           path: ${{ runner.temp }}/Valkiria-Productividad-macos.zip
           if-no-files-found: error
           retention-days: 30
-      # Pruebas de Rust del módulo de descargas: cubren que ninguna descarga se desvíe al espejo de
-      # Jan (anexo §12, RN-01.3). Van después de subir el artefacto para que esté disponible aunque
-      # fallen. Compilan en modo prueba, aparte del build de release.
-      - name: Pruebas de Rust · descargas (sin espejo de Jan)
+      # Pruebas de Rust: descargas (ninguna va al espejo de Jan, anexo §12) y rutas de la app
+      # (carpeta e identificador de Valkiria, no los de Jan, anexo §13). Van después de subir el
+      # artefacto para que esté disponible aunque fallen. Compilan en modo prueba.
+      - name: Pruebas de Rust · descargas y rutas de la app
         working-directory: apps/desktop/src-tauri
-        run: cargo test --locked --lib core::downloads
+        run: cargo test --locked --lib -- core::downloads core::app
 
   windows:
     name: Build y humo Windows x64
