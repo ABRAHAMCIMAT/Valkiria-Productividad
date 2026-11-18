@@ -126,9 +126,11 @@ Objetivos de rendimiento (gate de F1):
 |---|---|---|
 | Primer token (TTFT) con un prompt de 2 K tokens | ≤ 2.0 s | ≤ 1.5 s |
 | Velocidad de generación | ≥ 15 tok/s | ≥ 20 tok/s (8B) |
+| RAM máxima de Valkiria | ≤ 9 GB | ≤ 22 GB |
+| Calidad compuesta en el dataset dorado v1 (RN-06.2) | ≥ 0.80 | ≥ 0.80 |
 
 Hardware objetivo:
-- **macOS:** Apple Silicon M1 o posterior (Metal o MLX).
+- **macOS:** Apple Silicon M4 o posterior con macOS 27.2+ (Metal o MLX). Mac Intel no está soportado (R-12).
 - **Windows:** x64 con GPU que soporte CUDA o Vulkan; con solo CPU se usa el perfil Estándar.
 
 ## 6. Resultado de la revisión
