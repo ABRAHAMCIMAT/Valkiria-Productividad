@@ -36,9 +36,11 @@ instalar() {
   grep -v '^UV_CACHE_DIR=\|^UV_PYTHON_INSTALL_DIR=' .env 2>/dev/null > .env.nuevo || true
   printf 'UV_CACHE_DIR=%s\nUV_PYTHON_INSTALL_DIR=%s\n' "$DIR/_cache/uv" "$DIR/_cache/uv-python" >> .env.nuevo
   mv .env.nuevo .env
-  token="$(gh api -X POST "repos/$REPO/actions/runners/registration-token" --jq .token)"
-  ./config.sh --unattended --replace --url "https://github.com/$REPO" --token "$token" \
-    --name "$ETIQUETA" --labels "$ETIQUETA" --work _work
+  if [[ ! -f .runner ]]; then   # registrado una sola vez; volver a instalar solo reaplica el .env
+    token="$(gh api -X POST "repos/$REPO/actions/runners/registration-token" --jq .token)"
+    ./config.sh --unattended --replace --url "https://github.com/$REPO" --token "$token" \
+      --name "$ETIQUETA" --labels "$ETIQUETA" --work _work
+  fi
   ./svc.sh install || true
   ./svc.sh stop || true   # reinicia para que lea el .env
   ./svc.sh start
