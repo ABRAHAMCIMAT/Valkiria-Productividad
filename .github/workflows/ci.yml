@@ -19,7 +19,13 @@ concurrency:
 jobs:
   core:
     name: Core · ${{ matrix.etiqueta }}
-    runs-on: ${{ matrix.os }}
+    # macOS arm64: runner propio (vars.MACOS_RUNNER, R-19) en pushes y PRs de ramas del repo;
+    # los PRs de forks y el caso sin variable usan el runner de GitHub (matrix.os).
+    runs-on: >-
+      ${{ matrix.etiqueta == 'macos-arm64' && vars.MACOS_RUNNER &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+          && vars.MACOS_RUNNER || matrix.os }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
