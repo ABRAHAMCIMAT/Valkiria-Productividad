@@ -92,7 +92,6 @@ def test_criterios_de_f0_cubren_todas_las_hu() -> None:
     assert ids == esperados
 
 
-
 def test_criterios_de_f1_cubren_todas_las_hu() -> None:
     import tomllib
 
@@ -102,6 +101,7 @@ def test_criterios_de_f1_cubren_todas_las_hu() -> None:
     esperados = {"CA-04.1", "CA-04.2", "CA-05.1", "CA-05.2", "CA-05.3", "CA-06.1", "CA-06.2"}
     assert ids == esperados
     assert all(c["evidencia"].startswith("EV-F1-L") for c in datos["criterio"])
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="sources.sh necesita bash de Unix")
 def test_sonar_excluye_el_fork_de_jan() -> None:
