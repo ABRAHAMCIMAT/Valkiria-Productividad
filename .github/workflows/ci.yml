@@ -44,7 +44,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           python-version: "3.15"
-          enable-cache: true
+          # En el runner propio la caché vive en el Mac (UV_CACHE_DIR de su .env, R-19):
+          # subirla a GitHub solo agrega minutos.
+          enable-cache: ${{ runner.environment == 'github-hosted' }}
       - name: Instalar dependencias (uv.lock con hashes)
         run: uv sync --frozen --all-groups
       - name: Lint y formato

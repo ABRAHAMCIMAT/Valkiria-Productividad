@@ -25,14 +25,22 @@ PAQUETE="actions-runner-osx-arm64-$VERSION.tar.gz"
 instalar() {
   mkdir -p "$DIR" && cd "$DIR"
   if [[ ! -x ./config.sh ]]; then
-    curl -fsSLO "https://github.com/actions/runner/releases/download/v$VERSION/$PAQUETE"
+    curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSLO \
+      "https://github.com/actions/runner/releases/download/v$VERSION/$PAQUETE"
     echo "$SHA256  $PAQUETE" | shasum -a 256 -c -
     tar xzf "$PAQUETE" && rm "$PAQUETE"
   fi
+  # uv del runner aislado del usuario: setup-uv respeta estas variables si ya existen, así CI no
+  # usa ~/.cache/uv ni ~/.local/share/uv/python. La caché persiste en el Mac entre corridas.
+  mkdir -p "$DIR/_cache/uv" "$DIR/_cache/uv-python"
+  grep -v '^UV_CACHE_DIR=\|^UV_PYTHON_INSTALL_DIR=' .env 2>/dev/null > .env.nuevo || true
+  printf 'UV_CACHE_DIR=%s\nUV_PYTHON_INSTALL_DIR=%s\n' "$DIR/_cache/uv" "$DIR/_cache/uv-python" >> .env.nuevo
+  mv .env.nuevo .env
   token="$(gh api -X POST "repos/$REPO/actions/runners/registration-token" --jq .token)"
   ./config.sh --unattended --replace --url "https://github.com/$REPO" --token "$token" \
     --name "$ETIQUETA" --labels "$ETIQUETA" --work _work
   ./svc.sh install || true
+  ./svc.sh stop || true   # reinicia para que lea el .env
   ./svc.sh start
   ./svc.sh status
 }
