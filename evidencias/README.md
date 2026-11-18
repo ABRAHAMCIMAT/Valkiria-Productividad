@@ -5,6 +5,7 @@ Cada fase `F<n>` del [plan](../docs/06-plan-desarrollo-incremental.md) se cierra
 | Fase | Estado | Tag de cierre | Paquete |
 |---|---|---|---|
 | F0 | Cerrada (2026-11-11) | `fase-0-cierre` | [evidencias/F0](F0/) · [acta](F0/cierre.md) |
+| F1 | En curso (desde 2026-11-17) | `fase-1-cierre` | [evidencias/F1](F1/) · [acta (borrador)](F1/cierre.md) |
 
 Plantillas:
 - [Acta de cierre de fase](plantillas/cierre-fase.md)

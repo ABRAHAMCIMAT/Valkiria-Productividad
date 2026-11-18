@@ -1,0 +1,56 @@
+# Criterios de aceptación de F1 y su evidencia (entrada de tools/evidencias/trazabilidad.py).
+# Las pruebas siguen la convención test_ca_NN_M_* (docs/05 §4.1). Se completan en cada
+# incremento; al cierre, cada criterio necesita al menos una prueba, un job o una demostración.
+fase = "F1"
+
+# ---------------- HU-04 · Detección del perfil de hardware (incremento 1.2) ----------------
+[[criterio]]
+id = "CA-04.1"
+hu = "HU-04"
+reglas = ["RN-04.1", "RN-04.3"]
+evidencia = "EV-F1-L4"
+pruebas = []
+
+[[criterio]]
+id = "CA-04.2"
+hu = "HU-04"
+reglas = ["RN-04.2"]
+evidencia = "EV-F1-L4"
+pruebas = []
+
+# ---------------- HU-05 · Descarga verificada de modelos (incremento 1.3) ----------------
+[[criterio]]
+id = "CA-05.1"
+hu = "HU-05"
+reglas = ["RN-05.1", "RN-05.4"]
+evidencia = "EV-F1-L3"
+pruebas = []
+
+[[criterio]]
+id = "CA-05.2"
+hu = "HU-05"
+reglas = ["RN-05.2"]
+evidencia = "EV-F1-L6"
+pruebas = []
+
+[[criterio]]
+id = "CA-05.3"
+hu = "HU-05"
+reglas = ["RN-05.1", "RN-05.3"]
+evidencia = "EV-F1-L6"
+pruebas = []
+
+# ---------------- HU-06 · Selección de modelos basada en evidencia (incrementos 1.4 y 1.5) ----------------
+[[criterio]]
+id = "CA-06.1"
+hu = "HU-06"
+reglas = ["RN-06.1"]
+evidencia = "EV-F1-L5"
+pruebas = []
+
+[[criterio]]
+id = "CA-06.2"
+hu = "HU-06"
+reglas = ["RN-06.2", "RN-06.3"]
+evidencia = "EV-F1-L3"
+pruebas = []
