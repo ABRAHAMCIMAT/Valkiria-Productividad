@@ -208,6 +208,15 @@ def test_r_15_motor_sin_descarga_de_backends() -> None:
     assert {u.split("/")[2] for u in urls} <= {"huggingface.co"}
 
 
+def test_motor_sh_no_pisa_variables_de_msvc() -> None:
+    # LIB, INCLUDE y LIBPATH son las rutas que lee link.exe: asignarlas en motor.sh
+    # rompe el enlace en Windows (LNK1181 con kernel32.lib).
+    import re
+
+    motor = (WORKFLOW.parents[2] / "tools" / "desktop" / "motor.sh").read_text(encoding="utf-8")
+    assert not re.search(r"(?<![A-Za-z_])(LIB|INCLUDE|LIBPATH)=", motor)
+
+
 def test_motor_real_en_los_builds_de_desktop() -> None:
     """Desktop compila llama.cpp (Metal en macOS; CUDA, Vulkan y CPU en Windows) y no un stub."""
     flujo = WORKFLOW.read_text(encoding="utf-8")

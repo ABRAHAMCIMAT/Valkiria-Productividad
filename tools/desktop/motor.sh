@@ -25,11 +25,12 @@ MODELO="${VALKIRIA_MODELO_HUMO:-qwen3-0.6b-q8_0}"
 mkdir -p "$SALIDA"
 
 case "$(uname -s)" in
-  MINGW* | MSYS* | CYGWIN*) SO=windows; EXE=".exe"; LIB="ggml*.dll" ;;
-  Darwin) SO=macos; EXE=""; LIB="libggml*" ;;
-  *) SO=linux; EXE=""; LIB="libggml*" ;;
+  MINGW* | MSYS* | CYGWIN*) SO=windows; EXE=".exe"; PATRON_LIBS="ggml*.dll" ;;
+  Darwin) SO=macos; EXE=""; PATRON_LIBS="libggml*" ;;
+  *) SO=linux; EXE=""; PATRON_LIBS="libggml*" ;;
 esac
 WORKER="$BIN/jan-llama-worker$EXE"
+# Ojo: no usar LIB como nombre; en Windows es la ruta de bibliotecas de MSVC que lee link.exe.
 
 # Igual que ENGINE_FEATURE_* del Makefile de apps/desktop, con el respaldo de Vulkan.
 features() {
@@ -54,7 +55,7 @@ verificar() {
   tam=$(wc -c < "$WORKER" | tr -d ' ')
   # Un stub de stub-tauri-resources.mjs es un archivo vacío; el worker real pesa decenas de MB.
   (( tam > 1000000 )) || { echo "::error title=Motor::$WORKER mide $tam bytes: es un stub, no el motor"; exit 1; }
-  libs=$(find "$BIN" -maxdepth 1 -name "$LIB" -exec basename {} \; | sort | tr '\n' ' ')
+  libs=$(find "$BIN" -maxdepth 1 -name "$PATRON_LIBS" -exec basename {} \; | sort | tr '\n' ' ')
   [[ -n "$libs" ]] || { echo "::error title=Motor::faltan las bibliotecas ggml junto al worker"; exit 1; }
   for l in $libs; do
     [[ -s "$BIN/$l" ]] || { echo "::error title=Motor::$l está vacía (stub)"; exit 1; }
