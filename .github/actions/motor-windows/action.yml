@@ -58,9 +58,11 @@ runs:
         { echo "CUDA_PATH=$win"; echo "CUDA_HOME=$win"; } >> "$GITHUB_ENV"
         printf '%s\\bin\n%s\\bin\\x64\n' "$win" "$win" >> "$GITHUB_PATH"
 
-    - name: make, ninja y clang
+    - name: make, ninja, clang y rutas largas de git
       shell: bash
       run: |
+        # llama.cpp trae rutas de más de 260 caracteres (tools/ui) y el clon falla sin esto.
+        git config --global core.longpaths true
         command -v make >/dev/null || { choco install make -y --no-progress; echo 'C:\ProgramData\chocolatey\bin' >> "$GITHUB_PATH"; }
         command -v ninja >/dev/null || { choco install ninja -y --no-progress; echo 'C:\ProgramData\chocolatey\bin' >> "$GITHUB_PATH"; }
         if ! command -v clang >/dev/null; then echo 'C:\Program Files\LLVM\bin' >> "$GITHUB_PATH"; fi
