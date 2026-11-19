@@ -5,7 +5,7 @@ description = "LLMOps de Valkiria: MLflow 3, tags de trazabilidad, gate y eviden
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.15,<3.16"
-dependencies = ["mlflow>=3.18,<4"]
+dependencies = ["mlflow>=3.18,<4", "pyyaml>=6.0.3,<7"]
 
 [project.scripts]
 llmops = "valkiria_llmops.cli:main"
@@ -35,6 +35,10 @@ extend = "../ruff.toml"
 strict = true
 python_version = "3.15"
 files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["mlflow", "mlflow.*"]

@@ -180,3 +180,44 @@ def test_ca_01_3_predicado_valida_el_ejecutable() -> None:
     assert "subsystem" not in predicado
     with pytest.raises(ValueError, match="inválido"):
         smoke.predicado_red('x" OR process != "')
+
+
+# ---------------- F1 · incremento 1.1: motor real (R-15) ----------------
+MOTOR_TS = rebrand.APP / "extensions" / "llamacpp-extension" / "src"
+MOTOR_RS = rebrand.APP / "src-tauri" / "plugins" / "tauri-plugin-llamacpp" / "src"
+WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "desktop.yml"
+
+
+@pytest.mark.skipif(not FORK, reason="apps/desktop no existe")
+def test_r_15_motor_sin_descarga_de_backends() -> None:
+    """El motor no descarga backends de llama.cpp en tiempo de ejecución: va en el instalador.
+
+    La única URL fija del código del motor es el embedder de RAG, que solo se descarga tras el
+    consentimiento (anexo §12 de F0). Ninguna apunta a GitHub ni a un release de binarios.
+    """
+    import re
+
+    urls = set()
+    for base, patron in ((MOTOR_TS, "*.ts"), (MOTOR_RS, "*.rs")):
+        for f in base.rglob(patron):
+            if ".test." in f.name or "/test" in f.as_posix():
+                continue
+            urls |= set(re.findall(r"https://[^\s'\"`)]+", f.read_text(encoding="utf-8")))
+    prohibidas = [u for u in urls if "github" in u or "releases/download" in u]
+    assert prohibidas == []
+    assert {u.split("/")[2] for u in urls} <= {"huggingface.co"}
+
+
+def test_motor_real_en_los_builds_de_desktop() -> None:
+    """Desktop compila llama.cpp (Metal en macOS; CUDA, Vulkan y CPU en Windows) y no un stub."""
+    flujo = WORKFLOW.read_text(encoding="utf-8")
+    assert "JAN_ENGINE_VARIANT: metal" in flujo
+    assert "JAN_ENGINE_VARIANT: cuda13-vulkan" in flujo
+    assert flujo.count("make build-engine") == 2
+    assert flujo.count("tools/desktop/motor.sh verificar") == 2
+    # El stub ya no puede ocupar el lugar del motor: se compila antes y luego se verifica.
+    stub = "node scripts/stub-tauri-resources.mjs"
+    assert flujo.count(stub) == 2
+    for os_ in ("Metal", "CUDA 13, Vulkan y CPU"):
+        motor = flujo.index(f"Motor real · llama.cpp con {os_}")
+        assert motor < flujo.index(stub, motor)

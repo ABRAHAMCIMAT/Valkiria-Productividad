@@ -3,8 +3,10 @@
 # Para cuidar los minutos de macOS (riesgo R-08) no corre en cada PR: corre en main, cada noche,
 # a mano y en los PRs con la etiqueta "build-desktop".
 #
-# F0 compila la app completa con la marca, bun/uv reales e instaladores, pero con el motor de
-# inferencia (llama.cpp/MLX) como stub: el motor real se compila desde F1 (HU-04, HU-05).
+# Compila la app completa con la marca, bun/uv reales e instaladores, y desde F1 (incremento 1.1)
+# con el motor de inferencia real: llama.cpp con Metal en macOS y con CUDA 13, Vulkan y las
+# variantes de CPU (AVX2 entre ellas) en Windows. El motor va dentro del instalador; la app no
+# descarga backends en tiempo de ejecución (R-15). MLX sigue como stub (fuera del alcance de F1).
 # Ver apps/desktop/VALKIRIA.md y ADR-0001.
 #
 # macOS (decisión R-12, 2026-11-11): solo Apple Silicon M4 o posterior con macOS 27.2+. El .app es
@@ -64,7 +66,7 @@ jobs:
     name: Build macOS (arm64)
     needs: marca
     runs-on: macos-15
-    timeout-minutes: 120
+    timeout-minutes: 150
     defaults:
       run:
         working-directory: apps/desktop
@@ -84,7 +86,12 @@ jobs:
           rustup target add aarch64-apple-darwin
       - name: Dependencias, core y extensiones
         run: make install-and-build
-      - name: Íconos, licencia, bun/uv y motor stub
+      # Antes del stub: stub-tauri-resources.mjs nunca pisa un archivo que ya existe.
+      - name: Motor real · llama.cpp con Metal
+        env:
+          JAN_ENGINE_VARIANT: metal
+        run: make build-engine
+      - name: Íconos, licencia, bun/uv y stub de MLX
         run: |
           yarn build:icon
           yarn copy:assets:tauri
@@ -103,6 +110,9 @@ jobs:
           echo "Arquitecturas: $archs · LSMinimumSystemVersion: $minimo" | tee -a "$GITHUB_STEP_SUMMARY"
           [[ $archs == arm64 ]] || { echo "::error::Se esperaba solo arm64 y hay: $archs"; exit 1; }
           [[ $minimo == 27.2 ]] || { echo "::error::Se esperaba LSMinimumSystemVersion 27.2 y hay: $minimo"; exit 1; }
+          worker=$(find "$app/Contents" -name jan-llama-worker -type f | head -1)
+          [[ -n $worker && $(wc -c < "$worker") -gt 1000000 ]] || { echo "::error::La .app no trae el motor real"; exit 1; }
+          echo "Motor en la .app: ${worker#"$app/"} ($(wc -c < "$worker" | tr -d ' ') bytes)" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Empaquetar la .app
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle
@@ -119,12 +129,35 @@ jobs:
       - name: Pruebas de Rust · descargas y rutas de la app
         working-directory: apps/desktop/src-tauri
         run: cargo test --locked --lib -- core::downloads core::app
+      - name: Verificar el motor empaquetado (no es stub, arranca y lista dispositivos)
+        working-directory: .
+        run: tools/desktop/motor.sh verificar metal
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+      - name: Modelo de humo del catálogo (caché por SHA-256)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/valkiria/modelos
+          key: modelo-humo-${{ hashFiles('llmops/models/catalog.yaml') }}
+      - name: Prueba de humo del motor · carga un GGUF del catálogo y genera texto
+        working-directory: .
+        run: tools/desktop/motor.sh humo metal
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: motor-macos-arm64
+          path: |
+            reports/motor/
+            apps/desktop/src-tauri/target/engine-build.log
+          if-no-files-found: warn
+          retention-days: 30
 
   windows:
     name: Build y humo Windows x64
     needs: marca
     runs-on: windows-2022
-    timeout-minutes: 90
+    timeout-minutes: 240
     defaults:
       run:
         shell: bash
@@ -148,7 +181,18 @@ jobs:
           yarn build:tauri:plugin:api
           yarn build:core
           yarn build:extensions
-      - name: Íconos, licencia, bun/uv y motor stub
+      - name: Toolchain del motor (CUDA 13, Vulkan SDK, ninja y clang)
+        uses: ./.github/actions/motor-windows
+      # CUDA + Vulkan + variantes de CPU (GGML_CPU_ALL_VARIANTS, AVX2 entre ellas) en un solo worker:
+      # ggml elige el backend al cargar. Antes del stub, que nunca pisa un archivo que ya existe.
+      - name: Motor real · llama.cpp con CUDA 13, Vulkan y CPU
+        env:
+          JAN_ENGINE_VARIANT: cuda13-vulkan
+        run: make build-engine
+      - name: Verificar el motor empaquetado (no es stub, arranca y lista dispositivos)
+        working-directory: .
+        run: tools/desktop/motor.sh verificar cuda13-vulkan
+      - name: Íconos, licencia, bun/uv y stub de MLX
         run: |
           yarn build:icon
           yarn copy:assets:tauri
@@ -156,6 +200,17 @@ jobs:
           node scripts/stub-tauri-resources.mjs
       - name: Compilar la app e instaladores (MSI y NSIS, sin firma)
         run: yarn tauri build
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.15"
+      - name: Modelo de humo del catálogo (caché por SHA-256)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/valkiria/modelos
+          key: modelo-humo-${{ hashFiles('llmops/models/catalog.yaml') }}
+      - name: Prueba de humo del motor · carga un GGUF del catálogo y genera texto
+        working-directory: .
+        run: tools/desktop/motor.sh humo cuda13-vulkan
       - name: Instalar el MSI en silencio
         shell: pwsh
         run: |
@@ -187,4 +242,5 @@ jobs:
             apps/desktop/src-tauri/target/release/bundle/msi/*.msi
             apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
             reports/smoke/
+            reports/motor/
           retention-days: 30

@@ -70,6 +70,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     g = sub.add_parser("gate", help="Valida los tags obligatorios de los runs de una fase")
     g.add_argument("--phase", required=True)
 
+    m = sub.add_parser("modelo", help="Descarga un modelo del catálogo y verifica su SHA-256")
+    m.add_argument("id", help="id del modelo en llmops/models/catalog.yaml")
+    m.add_argument("--cache", type=Path, help="Carpeta de modelos (VALKIRIA_MODELOS_CACHE)")
+
     e = sub.add_parser("export", help="Exporta los runs de una fase a evidencias/<fase>/")
     e.add_argument("--phase", required=True)
     e.add_argument("--out", type=Path)
@@ -88,6 +92,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0
         (datos / "artifacts").mkdir(parents=True, exist_ok=True)  # pragma: no cover
         return subprocess.call(cmd)  # noqa: S603  # pragma: no cover  # nosec B603
+
+    if a.cmd == "modelo":
+        from valkiria_llmops import catalogo
+
+        try:
+            modelo = catalogo.cargar()[a.id]
+        except KeyError:
+            print(f"error: {a.id} no está en el catálogo (modelo no aprobado)", file=sys.stderr)
+            return 2
+        try:
+            print(catalogo.descargar(modelo, a.cache))
+        except catalogo.CatalogoError as err:
+            print(f"error: {err}", file=sys.stderr)
+            return 1
+        return 0
 
     from valkiria_llmops import demo, evidencia, experimentos
 
