@@ -18,7 +18,7 @@ gantt
     axisFormat  S%s
     section Base
     F0 Fundaciones y gobierno        :f0, 0, 2
-    F1 Inferencia y modelos          :f1, after f0, 2
+    F1 Inferencia y modelos          :f1, after f0, 3
     F2 Valkiria Core                 :f2, after f1, 2
     section Capacidades
     F3 Ingesta y RAG                 :f3, after f2, 3
@@ -33,7 +33,7 @@ gantt
     F11 Modo equipo (opcional)       :f11, after f10, 3
 ```
 
-Duración estimada: unas **23 semanas** hasta la versión 1.0 (F0 a F10), con un equipo de 3 a 4 personas. F11 es opcional.
+Duración estimada: unas **24 semanas** hasta la versión 1.0 (F0 a F10), con un equipo de 3 a 4 personas. F11 es opcional. F1 pasó de 2 a 3 semanas el 2026-11-17 por el motor real y el benchmark en hardware físico.
 
 ## 2. Resumen por fase
 
@@ -78,12 +78,13 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 - Todos los escaneos pasan.
 - El primer paquete `evidencias/F0` se genera de forma automática.
 
-### F1 · Inferencia local y selección de modelos (2 semanas)
+### F1 · Inferencia local y selección de modelos (3 semanas)
 
 **Alcance:**
 - `llmops/models/catalog.yaml`: modelo, URL, SHA-256, licencia, perfil y RAM estimada.
 - Descarga verificada desde la UI de Jan restringida al catálogo.
-- Detección del perfil de hardware: Estándar (≤ 16 GB) o Avanzado (≤ 32 GB); y el backend de aceleración (Metal, MLX, CUDA, Vulkan o CPU).
+- Motor de inferencia real: llama.cpp compilado con Metal (macOS arm64) y con CUDA, Vulkan y CPU AVX2 (Windows x64), empaquetado en el instalador; la app no descarga motores en tiempo de ejecución (CA-01.3).
+- Detección del perfil de hardware (RN-04.1): Estándar (< 32 GB) o Avanzado (≥ 32 GB); y el backend de aceleración (Metal, MLX, CUDA, Vulkan o CPU).
 - Dataset dorado v1, con 150 casos en español: chat, extracción, razonamiento corto y JSON.
 - Benchmark de calidad, TTFT, tok/s y RAM en el experimento `model-selection`.
 - Selección del modelo principal y del router por perfil (ADR-0011 actualizado).
@@ -246,4 +247,9 @@ Todas las fases cierran con L1 (HU de la fase aprobadas) y L9 (retrospectiva). N
 | R-11 | ~~onnxruntime sin *wheels* para Python 3.15~~ | — | — | **Cerrado (2026-11-12):** Valkiria no depende de onnxruntime. El *embedder* usa `sentence-transformers` sobre torch y el OCR de respaldo usa el motor del SO (Apple Vision en macOS; Windows.Media.Ocr o tesserocr en Windows). Docling se instala como `docling-slim` con extras, sin rapidocr (ADR-0002, ADR-0009); `spike-deps.yml` lo vigila cada semana | Ingeniero LLMOps |
 | R-12 | Sin *wheels* para macOS x64 de lancedb, torch y onnxruntime | — | — | **Cerrado el 2026-11-11:** Valkiria no soporta Mac Intel. El mínimo de macOS es Apple Silicon M4 o posterior con macOS 27.2+; la app declara `LSMinimumSystemVersion` 27.2 y la prueba de humo de macOS corre en un Mac M4 (ADR-0002) | Product Owner |
 | R-13 | Jan v0.8.8 traía ~100 CVE altas o críticas en dependencias de terceros. **Mitigado (2026-11-11): 0 hallazgos.** *Resolutions* de yarn, limpieza de dependencias sin uso, `quinn-proto` 0.11.15, tinypool 2.2.0, zip 9, calamine 0.38, tauri 2.12 y tauri-plugin-updater 2.14; EX-003 cerrada | Baja | Medio | Trivy en cada CI bloquea cualquier CVE nueva sin excepción; al sincronizar un tag de Jan, conservar los cambios de `apps/desktop/VALKIRIA.md` | Oficial de seguridad |
+| R-14 | No hay equipo de 32 GB ni Windows con GPU para el benchmark de F1. **2026-11-17:** solo hay un Mac M4 de 16 GB | Alta | Alto | El benchmark corre en el Mac M4 de 16 GB (perfil Estándar). Sin equipo físico, el perfil Avanzado y Windows quedan «no verificado» y no se marca modelo por defecto; el PO decide si la versión `0.1.0` sale así | Líder técnico |
+| R-15 | El motor real descarga backends de llama.cpp desde GitHub en tiempo de ejecución, como en Jan | Media | Alto | Empaquetar los binarios en el build y desactivar la descarga; la prueba de humo (0 conexiones en el primer arranque) lo detecta | Líder técnico |
+| R-16 | Ningún candidato del perfil Estándar llega a 0.80 de calidad compuesta con 16 GB | Media | Alto | Ampliar candidatos (Phi-4-mini, Granite, SmolLM3) y cuantizaciones; si no alcanza, el PO decide si baja el umbral con un ADR | Ingeniero LLMOps |
+| R-17 | Candidatos con licencias fuera de Apache 2.0 o MIT (por ejemplo, Gemma o Llama) | Media | Medio | Filtro de licencia en el esquema de `catalog.yaml` desde el primer commit; excepción solo con ADR (RN-05.1) | Oficial de seguridad |
+| R-18 | Variación de latencia > 10 % entre corridas (CA-06.1) por procesos de fondo | Media | Medio | Semilla fija, 3 repeticiones y mediana; equipo sin otras apps abiertas y con alimentación conectada | Ingeniero LLMOps |
 | R-19 | GitHub no asigna runner macOS arm64 por falta de capacidad y el check requerido «Core · macos-arm64» queda cancelado (2026-11-18, `main` tras #23) | Alta | Medio | Runner propio en el Mac M4 (`tools/ci/runner-mac.sh`, etiqueta `valkiria-m4`) activado con la variable `MACOS_RUNNER`; solo pushes y PRs de ramas del repo, los forks siguen en `macos-15`. Si el Mac no está disponible, `gh variable delete MACOS_RUNNER` vuelve a GitHub; `reintento.yml` reintenta las fallas por falta de runner | Líder técnico |
