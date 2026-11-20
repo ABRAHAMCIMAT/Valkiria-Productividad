@@ -86,6 +86,8 @@ humo() {
   gguf=$(cd "$RAIZ/llmops" && uv run --frozen --no-dev llmops modelo "$MODELO")
   echo "Modelo verificado: $gguf"
   log="$SALIDA/humo-$SO.log"
+  # Windows no tiene rpath: el ejecutable de prueba busca ggml.dll y ggml-base.dll en el PATH.
+  [[ "$SO" == windows ]] && export PATH="$BIN:$PATH"
   # Mismos features que el worker: el árbol de cmake de build-engine se reutiliza.
   (cd "$PLUGIN" && JAN_TEST_GGUF="$gguf" cargo test --release --features "$(features)" \
       --test engine_smoke -- --test-threads=1 2>&1) | tee "$log"
