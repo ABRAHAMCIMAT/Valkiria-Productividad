@@ -123,12 +123,13 @@ jobs:
           path: ${{ runner.temp }}/Valkiria-Productividad-macos.zip
           if-no-files-found: error
           retention-days: 30
-      # Pruebas de Rust: descargas (ninguna va al espejo de Jan, anexo §12) y rutas de la app
-      # (carpeta e identificador de Valkiria, no los de Jan, anexo §13). Van después de subir el
-      # artefacto para que esté disponible aunque fallen. Compilan en modo prueba.
-      - name: Pruebas de Rust · descargas y rutas de la app
+      # Pruebas de Rust: descargas (ninguna va al espejo de Jan, anexo §12), rutas de la app
+      # (carpeta e identificador de Valkiria, no los de Jan, anexo §13) y el perfil de hardware con
+      # su log de auditoría (HU-04, CA-04.1 y CA-04.2). Van después de subir el artefacto para que
+      # esté disponible aunque fallen. Compilan en modo prueba.
+      - name: Pruebas de Rust · descargas, rutas de la app y perfil de hardware
         working-directory: apps/desktop/src-tauri
-        run: cargo test --locked --lib -- core::downloads core::app
+        run: cargo test --locked --lib -- core::downloads core::app core::valkiria
       - name: Verificar el motor empaquetado (no es stub, arranca y lista dispositivos)
         working-directory: .
         run: tools/desktop/motor.sh verificar metal

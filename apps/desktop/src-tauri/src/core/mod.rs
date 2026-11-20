@@ -22,6 +22,9 @@ pub mod state;
 #[cfg(not(feature = "cli"))]
 pub mod system;
 pub mod threads;
+// Valkiria (HU-04): perfil de hardware y log de auditoría. No existe en Jan.
+#[cfg(not(any(feature = "cli", target_os = "android", target_os = "ios")))]
+pub mod valkiria;
 
 // `custom_updater`/`hmac_client` (the HMAC-signed request-signing bits) are
 // also used by the headless CLI's usage ping (`cli::telemetry`); only

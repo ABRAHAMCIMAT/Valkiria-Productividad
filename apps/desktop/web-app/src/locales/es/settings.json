@@ -136,7 +136,20 @@
     "freeOf": "libre de",
     "driverVersion": "Versión del controlador",
     "computeCapability": "Capacidad de cómputo",
-    "systemMonitor": "Monitor del sistema"
+    "systemMonitor": "Monitor del sistema",
+    "valkiria": {
+      "titulo": "Perfil de hardware",
+      "ram": "RAM detectada",
+      "acelerador": "Aceleración",
+      "perfil": "Perfil",
+      "estandar": "Estándar",
+      "avanzado": "Avanzado",
+      "aviso": "Con menos de 16 GB de RAM el rendimiento será limitado.",
+      "requiereRam": "El perfil {{perfil}} requiere {{gb}} GB de RAM o más; este equipo tiene {{ram}} GB.",
+      "principal": "Modelo principal recomendado",
+      "router": "Router recomendado",
+      "pendiente": "Pendiente: se elige con el benchmark de F1"
+    }
   },
   "httpsProxy": {
     "proxy": "Proxy",
