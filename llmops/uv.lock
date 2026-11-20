@@ -2087,6 +2087,7 @@ version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "mlflow" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -2101,7 +2102,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "mlflow", specifier = ">=3.18,<4" }]
+requires-dist = [
+    { name = "mlflow", specifier = ">=3.18,<4" },
+    { name = "pyyaml", specifier = ">=6.0.3,<7" },
+]
 
 [package.metadata.requires-dev]
 dev = [

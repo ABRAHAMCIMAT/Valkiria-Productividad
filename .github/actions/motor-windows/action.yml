@@ -1,0 +1,80 @@
+# Toolchain del motor llama.cpp en Windows x64 (F1, incremento 1.1): CUDA 13, Vulkan SDK, ninja y clang.
+#
+# Basado en apps/desktop/.github/actions/setup-engine-toolchain del fork de Jan, con dos cambios de
+# seguridad: el Vulkan SDK va fijado a una versión con su SHA-256 publicado por LunarG (upstream baja
+# "latest" sin verificar), y cada archivo de CUDA se verifica contra el manifiesto de NVIDIA, cuyo
+# propio SHA-256 también queda fijado aquí.
+name: Toolchain del motor en Windows
+description: Instala y verifica CUDA 13, el Vulkan SDK, ninja y clang para `make build-engine`.
+
+runs:
+  using: composite
+  steps:
+    - name: Vulkan SDK (versión y SHA-256 fijos)
+      shell: bash
+      env:
+        VERSION: "1.4.363.1"
+        SHA256: c02932bd9a968b22d404536108adaacac908c081cd6b0113f5bfefc523dd0a6a
+      run: |
+        set -euo pipefail
+        exe="vulkansdk-windows-X64-$VERSION.exe"
+        curl --proto '=https' --proto-redir '=https' -fsSL -o "$RUNNER_TEMP/$exe" \
+          "https://sdk.lunarg.com/sdk/download/$VERSION/windows/$exe"
+        echo "$SHA256  $RUNNER_TEMP/$exe" | sha256sum -c -
+        "$RUNNER_TEMP/$exe" --root 'C:\VulkanSDK' --accept-licenses --default-answer --confirm-command install
+        echo 'VULKAN_SDK=C:\VulkanSDK' >> "$GITHUB_ENV"
+        echo 'C:\VulkanSDK\Bin' >> "$GITHUB_PATH"
+
+    - name: CUDA 13.2.2 (archivos redist verificados)
+      shell: bash
+      env:
+        RELEASE: "13.2.2"
+        MANIFEST_SHA256: 89d93e6de640d47eb43c63437fe1be426ed21dd58cc79933a29acbca33c6eeb8
+      run: |
+        set -euo pipefail
+        base='https://developer.download.nvidia.com/compute/cuda/redist'
+        manifest="$RUNNER_TEMP/redistrib.json"
+        curl --proto '=https' -fsSL -o "$manifest" "$base/redistrib_$RELEASE.json"
+        echo "$MANIFEST_SHA256  $manifest" | sha256sum -c -
+        root="/c/cuda-$RELEASE"
+        tmp="$RUNNER_TEMP/cuda-redist"
+        mkdir -p "$tmp" "$root"
+        # cuBLAS es la única biblioteca matemática que enlaza ggml; el resto es nvcc y su runtime.
+        for pkg in cuda_nvcc cuda_crt libnvvm libnvptxcompiler libnvjitlink libnvfatbin \
+                   cuda_cuobjdump cuda_nvdisasm cuda_nvprune cuda_cuxxfilt cuda_nvrtc \
+                   cuda_cudart libcublas cuda_cccl cuda_nvtx cuda_profiler_api; do
+          rel=$(jq -r --arg p "$pkg" '.[$p]["windows-x86_64"].relative_path // empty' "$manifest")
+          sha=$(jq -r --arg p "$pkg" '.[$p]["windows-x86_64"].sha256 // empty' "$manifest")
+          [[ -n "$rel" && -n "$sha" ]] || { echo "::error::$pkg no está en redistrib_$RELEASE.json"; exit 1; }
+          zip="$tmp/$(basename "$rel")"
+          curl --proto '=https' -fsSL -o "$zip" "$base/$rel"
+          echo "$sha  $zip" | sha256sum -c - >/dev/null
+          7z x -y -o"$tmp" "$zip" >/dev/null
+          cp -r "$tmp/$(basename "$rel" .zip)"/* "$root"/
+          rm -rf "$zip" "$tmp/$(basename "$rel" .zip)"
+        done
+        "$root/bin/nvcc.exe" --version 2>/dev/null || "$root/bin/x64/nvcc.exe" --version
+        win="C:\\cuda-$RELEASE"
+        { echo "CUDA_PATH=$win"; echo "CUDA_HOME=$win"; } >> "$GITHUB_ENV"
+        printf '%s\\bin\n%s\\bin\\x64\n' "$win" "$win" >> "$GITHUB_PATH"
+
+    - name: make, ninja, clang y rutas largas de git
+      shell: bash
+      run: |
+        # llama.cpp trae rutas de más de 260 caracteres (tools/ui) y el clon falla sin esto.
+        git config --global core.longpaths true
+        command -v make >/dev/null || { choco install make -y --no-progress; echo 'C:\ProgramData\chocolatey\bin' >> "$GITHUB_PATH"; }
+        command -v ninja >/dev/null || { choco install ninja -y --no-progress; echo 'C:\ProgramData\chocolatey\bin' >> "$GITHUB_PATH"; }
+        if ! command -v clang >/dev/null; then echo 'C:\Program Files\LLVM\bin' >> "$GITHUB_PATH"; fi
+
+    # nvcc en Windows solo acepta cl como compilador anfitrión y lo busca en el PATH.
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+    # Dentro del entorno de VS, el sh de Git antepone su usr/bin, donde está el `link` de coreutils:
+    # se fija el link.exe de MSVC por ruta completa.
+    - name: Linker de MSVC para cargo
+      shell: pwsh
+      run: |
+        $link = Join-Path $env:VCToolsInstallDir 'bin\Hostx64\x64\link.exe'
+        if (-not (Test-Path $link)) { throw "no se encontró link.exe en $link" }
+        Add-Content $env:GITHUB_ENV "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$link"

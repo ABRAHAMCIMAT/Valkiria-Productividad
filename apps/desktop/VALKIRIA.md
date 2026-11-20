@@ -60,9 +60,13 @@ las 17 del updater pasan. `trivy fs apps/desktop`: 0 hallazgos altos o críticos
 
 ## Limitaciones conocidas en F0
 
-- **Motor de inferencia:** el build de CI usa los *stubs* de Jan (`scripts/stub-tauri-resources.mjs`)
-  para llama.cpp y MLX. La app abre y muestra la marca, pero no ejecuta modelos locales; el motor real
-  se compila desde F1 (HU-04, HU-05).
+- **Motor de inferencia (resuelto en F1, incremento 1.1):** CI compila `jan-llama-worker` con
+  `make build-engine` desde llama.cpp `b11669`, fijado por commit en
+  `src-tauri/plugins/tauri-plugin-llamacpp/build.rs`: Metal en macOS y CUDA 13, Vulkan y las variantes
+  de CPU (AVX2 entre ellas) en Windows. El motor va dentro del instalador y la app no descarga backends
+  en tiempo de ejecución (R-15). `tools/desktop/motor.sh` verifica que el motor empaquetado no es un
+  stub y lo prueba con un GGUF del catálogo. `scripts/stub-tauri-resources.mjs` solo cubre ya MLX,
+  que queda fuera del alcance de F1.
 - **Dependencias de terceros:** 0 hallazgos altos o críticos desde el 2026-11-11 (EX-003 cerrada). CI los
   reporta en cada PR y bloquea si aparece uno nuevo sin excepción.
 - **Pruebas de Jan:** las 5 de `llamacpp-extension` y las 13 de `web-app` que comprobaban el
