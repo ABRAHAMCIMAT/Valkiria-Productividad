@@ -163,7 +163,20 @@
     "backendApiDesc": "How llama.cpp talks to this GPU",
     "backendSelectDesc": "Use this API for this GPU",
     "unifiedMemory": "Unified Memory",
-    "unifiedMemoryDesc": "The GPU shares one memory pool with the CPU — models draw from the same memory as the rest of the system."
+    "unifiedMemoryDesc": "The GPU shares one memory pool with the CPU — models draw from the same memory as the rest of the system.",
+    "valkiria": {
+      "titulo": "Hardware profile",
+      "ram": "Detected RAM",
+      "acelerador": "Acceleration",
+      "perfil": "Profile",
+      "estandar": "Standard",
+      "avanzado": "Advanced",
+      "aviso": "With less than 16 GB of RAM, performance will be limited.",
+      "requiereRam": "The {{perfil}} profile requires {{gb}} GB of RAM or more; this computer has {{ram}} GB.",
+      "principal": "Recommended main model",
+      "router": "Recommended router",
+      "pendiente": "Pending: chosen by the F1 benchmark"
+    }
   },
   "httpsProxy": {
     "proxy": "Proxy",

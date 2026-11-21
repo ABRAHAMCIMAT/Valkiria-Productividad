@@ -44,6 +44,39 @@ ATRIBUCION_EN = (
 )
 
 
+# HU-04 · textos de la tarjeta del perfil de hardware (es/en; el resto de idiomas usa el inglés).
+PERFIL_ES = {
+    "titulo": "Perfil de hardware",
+    "ram": "RAM detectada",
+    "acelerador": "Aceleración",
+    "perfil": "Perfil",
+    "estandar": "Estándar",
+    "avanzado": "Avanzado",
+    "aviso": "Con menos de 16 GB de RAM el rendimiento será limitado.",
+    "requiereRam": (
+        "El perfil {{perfil}} requiere {{gb}} GB de RAM o más; este equipo tiene {{ram}} GB."
+    ),
+    "principal": "Modelo principal recomendado",
+    "router": "Router recomendado",
+    "pendiente": "Pendiente: se elige con el benchmark de F1",
+}
+PERFIL_EN = {
+    "titulo": "Hardware profile",
+    "ram": "Detected RAM",
+    "acelerador": "Acceleration",
+    "perfil": "Profile",
+    "estandar": "Standard",
+    "avanzado": "Advanced",
+    "aviso": "With less than 16 GB of RAM, performance will be limited.",
+    "requiereRam": (
+        "The {{perfil}} profile requires {{gb}} GB of RAM or more; this computer has {{ram}} GB."
+    ),
+    "principal": "Recommended main model",
+    "router": "Recommended router",
+    "pendiente": "Pending: chosen by the F1 benchmark",
+}
+
+
 class ParcheError(RuntimeError):
     """Un parche no encontró ni el texto original ni el ya aplicado."""
 
@@ -129,6 +162,59 @@ PARCHES = [
               />
 """,
         "tarjeta Acerca de",
+    ),
+    # --- HU-04 (F1, incremento 1.2) · perfil de hardware y log de auditoría ---
+    # El código vive en archivos propios (src-tauri/src/core/valkiria/ y
+    # web-app/src/containers/valkiria/); estos parches solo lo enganchan.
+    Parche(
+        "src-tauri/src/core/mod.rs",
+        "pub mod threads;\n",
+        "pub mod threads;\n"
+        "// Valkiria (HU-04): perfil de hardware y log de auditoría. No existe en Jan.\n"
+        '#[cfg(not(any(feature = "cli", target_os = "android", target_os = "ios")))]\n'
+        "pub mod valkiria;\n",
+        "módulo de Valkiria",
+    ),
+    Parche(
+        "src-tauri/src/lib.rs",
+        "        core::updater::commands::is_update_available,\n    ]);\n",
+        "        core::updater::commands::is_update_available,\n"
+        "        // Valkiria (HU-04): perfil de hardware\n"
+        "        core::valkiria::comandos::valkiria_perfil_hardware,\n"
+        "        core::valkiria::comandos::valkiria_elegir_perfil,\n"
+        "    ]);\n",
+        "comandos del perfil de hardware",
+    ),
+    Parche(
+        "src-tauri/src/lib.rs",
+        "            // Store the new app version\n",
+        "            // Valkiria (RN-04.3): app.start con el perfil y el hardware detectado.\n"
+        "            // En segundo plano: detectar GPUs no debe retrasar la ventana.\n"
+        '            #[cfg(not(any(target_os = "ios", target_os = "android")))]\n'
+        "            {\n"
+        "                let handle = app.handle().clone();\n"
+        "                let version = app_version.clone();\n"
+        "                tauri::async_runtime::spawn_blocking(move || {\n"
+        "                    core::valkiria::comandos::registrar_arranque(&handle, &version);\n"
+        "                });\n"
+        "            }\n"
+        "\n"
+        "            // Store the new app version\n",
+        "evento app.start",
+    ),
+    Parche(
+        "web-app/src/routes/settings/hardware.tsx",
+        "import { Button } from '@/components/ui/button'\n",
+        "import { Button } from '@/components/ui/button'\n"
+        "import { PerfilHardware } from '@/containers/valkiria/PerfilHardware'\n",
+        "import del perfil de hardware",
+    ),
+    Parche(
+        "web-app/src/routes/settings/hardware.tsx",
+        '            <div className="flex flex-col justify-between gap-4 gap-y-3 w-full">\n',
+        '            <div className="flex flex-col justify-between gap-4 gap-y-3 w-full">\n'
+        "              <PerfilHardware />\n",
+        "tarjeta del perfil de hardware",
     ),
     # --- RN-01.3 · sin proveedores ni conexiones remotas por defecto ---
     Parche(
@@ -331,6 +417,8 @@ def _locales(texto: str, ruta: Path) -> str:
         es = ruta.parent.name == "es"
         general["aboutTitle"] = f"{NOMBRE} · {FABRICANTE}"
         general["aboutAttribution"] = ATRIBUCION_ES if es else ATRIBUCION_EN
+        hardware = datos.setdefault("hardware", {})
+        hardware["valkiria"] = PERFIL_ES if es else PERFIL_EN
     return json.dumps(datos, indent=2, ensure_ascii=False) + "\n"
 
 

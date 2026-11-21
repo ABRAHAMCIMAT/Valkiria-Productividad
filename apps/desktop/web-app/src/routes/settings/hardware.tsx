@@ -21,6 +21,7 @@ import { toNumber } from '@/utils/number'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useAppState } from '@/hooks/useAppState'
 import { Button } from '@/components/ui/button'
+import { PerfilHardware } from '@/containers/valkiria/PerfilHardware'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Route = createFileRoute(route.settings.hardware as any)({
@@ -517,6 +518,7 @@ function HardwareContent() {
             </div>
           ) : (
             <div className="flex flex-col justify-between gap-4 gap-y-3 w-full">
+              <PerfilHardware />
               <Card title={t('settings:hardware.os')}>
                 <CardItem
                   title={t('settings:hardware.name')}

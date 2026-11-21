@@ -326,6 +326,9 @@ pub fn run() {
         // Custom updater commands (desktop only)
         core::updater::commands::check_for_app_updates,
         core::updater::commands::is_update_available,
+        // Valkiria (HU-04): perfil de hardware
+        core::valkiria::comandos::valkiria_perfil_hardware,
+        core::valkiria::comandos::valkiria_elegir_perfil,
     ]);
 
     // Mobile: no updater commands
@@ -429,6 +432,17 @@ pub fn run() {
             // Migrate MCP servers
             if let Err(e) = setup::migrate_mcp_servers(app.handle().clone(), store.clone()) {
                 log::error!("Failed to migrate MCP servers: {e}");
+            }
+
+            // Valkiria (RN-04.3): app.start con el perfil y el hardware detectado.
+            // En segundo plano: detectar GPUs no debe retrasar la ventana.
+            #[cfg(not(any(target_os = "ios", target_os = "android")))]
+            {
+                let handle = app.handle().clone();
+                let version = app_version.clone();
+                tauri::async_runtime::spawn_blocking(move || {
+                    core::valkiria::comandos::registrar_arranque(&handle, &version);
+                });
             }
 
             // Store the new app version
